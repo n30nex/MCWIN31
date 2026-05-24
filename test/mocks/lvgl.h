@@ -32,6 +32,7 @@
 typedef uint32_t lv_color_t;
 typedef int      lv_coord_t;
 typedef uint32_t lv_opa_t;
+typedef uint32_t lv_obj_flag_t;
 
 // ── Color helpers ────────────────────────────────────────
 inline lv_color_t lv_color_hex(uint32_t hex) { return hex; }

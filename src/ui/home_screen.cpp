@@ -20,6 +20,7 @@
 #include "home_screen.h"
 #include "navigation.h"
 #include "theme.h"
+#include "chrome.h"
 #include "responsive.h"
 #include "../hal/tdeck_pins.h"
 #include "../mesh/mesh_wrapper.h"
@@ -34,6 +35,7 @@
 namespace slopos::ui {
 
 using namespace theme;
+using chrome::disable_scroll;
 
 static lv_obj_t* scr           = nullptr;
 static lv_obj_t* top_bar       = nullptr;
@@ -79,24 +81,6 @@ static int tile_h[ICON_COUNT] = {};
 static int selected_icon = 0;
 static int active_cols = 1;
 static int active_rows = 1;
-
-static constexpr lv_obj_flag_t no_scroll_flags()
-{
-    return (lv_obj_flag_t)(
-        LV_OBJ_FLAG_SCROLLABLE |
-        LV_OBJ_FLAG_SCROLL_ELASTIC |
-        LV_OBJ_FLAG_SCROLL_MOMENTUM |
-        LV_OBJ_FLAG_SCROLL_CHAIN |
-        LV_OBJ_FLAG_SCROLL_ON_FOCUS |
-        LV_OBJ_FLAG_SCROLL_WITH_ARROW);
-}
-
-static void disable_scroll(lv_obj_t* obj)
-{
-    lv_obj_remove_flag(obj, no_scroll_flags());
-    lv_obj_set_scroll_dir(obj, LV_DIR_NONE);
-    lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
-}
 
 static void force_full_tile_redraw(int idx)
 {
@@ -164,31 +148,10 @@ static void on_icon_click(lv_event_t* e)
         navigate_to(icons[idx].target);
 }
 
-// ── Build dynamic channel hashtag string ────────────────
-static void build_channel_string(char* buf, size_t sz)
-{
-    char names[8][32];
-    int n = slopos::mesh::exportChannels(names, 8);
-    if (n == 0) { strncpy(buf, "no channels", sz); return; }
-    int pos = 0;
-    for (int i = 0; i < n && pos < (int)sz - 20; i++) {
-        const char* nm = names[i];
-        pos += snprintf(buf + pos, sz - pos, "%s%s*  ",
-                        nm[0] == '#' ? "" : "#", nm);
-    }
-    while (pos > 0 && buf[pos-1] == ' ') buf[--pos] = '\0';
-}
-
 // ── Top bar ─────────────────────────────────────────────
 static void create_top_bar()
 {
-    top_bar = lv_obj_create(scr);
-    lv_obj_set_size(top_bar, LV_PCT(100), TOP_BAR_H);
-    lv_obj_align(top_bar, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(top_bar, lv_color_hex(WIN31_TITLE), 0);
-    lv_obj_set_style_bg_opa(top_bar, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(top_bar, 0, 0);
-    lv_obj_set_style_border_width(top_bar, 0, 0);
+    top_bar = chrome::create_title_bar(scr, TOP_BAR_H, "MCWIN31 Program Manager");
 
     // ≡ hamburger using LVGL symbol font (reliable on all builds)
     lv_obj_t* control = lv_label_create(top_bar);
@@ -197,15 +160,9 @@ static void create_top_bar()
     lv_obj_set_style_text_font(control, &lv_font_montserrat_10, 0);
     lv_obj_align(control, LV_ALIGN_LEFT_MID, 4, 0);
 
-    lv_obj_t* title = lv_label_create(top_bar);
-    lv_label_set_text(title, "MCWIN31 Program Manager");
-    lv_obj_set_style_text_color(title, lv_color_hex(WIN31_HIGHLIGHT), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_CENTER, 0, 0);
-
     // Dynamic channel hashtags
     char ch_buf[120];
-    build_channel_string(ch_buf, sizeof(ch_buf));
+    chrome::build_channel_string(ch_buf, sizeof(ch_buf));
     hashtag_label = lv_label_create(top_bar);
     lv_label_set_text(hashtag_label, ch_buf);
     lv_label_set_long_mode(hashtag_label, LV_LABEL_LONG_DOT);
@@ -221,51 +178,17 @@ static void create_top_bar()
     lv_obj_set_style_text_font(time_label, &lv_font_montserrat_12, 0);
     lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, -4, 0);
 
-    // Divider
-    lv_obj_t* div = lv_obj_create(scr);
-    lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(div, LV_ALIGN_TOP_MID, 0, TOP_BAR_H);
-    lv_obj_set_style_bg_color(div, lv_color_hex(WIN31_DARK_SHADOW), 0);
-    lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div, 0, 0);
+    chrome::create_divider(scr, TOP_BAR_H, DIVIDER_H);
 }
 
 // ── Bottom bar ──────────────────────────────────────────
 static void create_bottom_bar()
 {
-    bottom_bar = lv_obj_create(scr);
-    lv_obj_set_size(bottom_bar, LV_PCT(100), BOT_BAR_H);
-    lv_obj_align(bottom_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(bottom_bar, lv_color_hex(WIN31_FACE), 0);
-    lv_obj_set_style_bg_opa(bottom_bar, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(bottom_bar, 0, 0);
-    lv_obj_set_style_border_width(bottom_bar, 0, 0);
-
-    lv_obj_t* dev = lv_label_create(bottom_bar);
-    lv_label_set_text(dev, slopos::mesh::getOwnName());
-    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(dev, &lv_font_montserrat_10, 0);
-    lv_obj_align(dev, LV_ALIGN_LEFT_MID, 4, 0);
-
-    signal_label = lv_label_create(bottom_bar);
-    lv_label_set_text(signal_label, "▂▄▆█");
-    lv_obj_set_style_text_color(signal_label, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_text_font(signal_label, &lv_font_montserrat_10, 0);
-    lv_obj_align(signal_label, LV_ALIGN_CENTER, -20, 0);
-
-    batt_label = lv_label_create(bottom_bar);
-    lv_label_set_text(batt_label, "--%");
-    lv_obj_set_style_text_color(batt_label, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(batt_label, &lv_font_montserrat_10, 0);
-    lv_obj_align(batt_label, LV_ALIGN_RIGHT_MID, -4, 0);
-
-    // Divider
-    lv_obj_t* div = lv_obj_create(scr);
-    lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(div, LV_ALIGN_TOP_MID, 0, DISPLAY_H - BOT_BAR_H - DIVIDER_H);
-    lv_obj_set_style_bg_color(div, lv_color_hex(WIN31_DARK_SHADOW), 0);
-    lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div, 0, 0);
+    chrome::StatusBarParts parts =
+        chrome::create_status_bar(scr, DISPLAY_H, BOT_BAR_H, DIVIDER_H);
+    bottom_bar = parts.bar;
+    signal_label = parts.signal;
+    batt_label = parts.battery;
 }
 
 // ── Icon tile ────────────────────────────────────────────
@@ -450,12 +373,7 @@ void home_screen_handle_trackball(SlopOSTrackballEvent event)
 
 void home_screen_update_battery(int pct)
 {
-    if (!batt_label) return;
-    char buf[8];
-    snprintf(buf, sizeof(buf), "%d%%", pct);
-    lv_label_set_text(batt_label, buf);
-    lv_obj_set_style_text_color(batt_label,
-        pct > 20 ? lv_color_hex(ACCENT) : lv_color_hex(ACCENT_RED), 0);
+    chrome::update_battery_label(batt_label, pct);
 }
 
 void home_screen_update_time(const char* time_str)
@@ -467,20 +385,14 @@ void home_screen_update_time(const char* time_str)
 void home_screen_update_signal(int rssi)
 {
     if (!signal_label) return;
-    const char* bars;
-    if (rssi > -70)       bars = "▂▄▆█";
-    else if (rssi > -85)  bars = "▂▄▆ ";
-    else if (rssi > -100) bars = "▂▄  ";
-    else if (rssi > -115) bars = "▂   ";
-    else                  bars = "    ";
-    lv_label_set_text(signal_label, bars);
+    lv_label_set_text(signal_label, chrome::signal_meter(rssi));
 }
 
 void home_screen_update_channels()
 {
     if (!hashtag_label) return;
     char buf[120];
-    build_channel_string(buf, sizeof(buf));
+    chrome::build_channel_string(buf, sizeof(buf));
     lv_label_set_text(hashtag_label, buf);
 }
 

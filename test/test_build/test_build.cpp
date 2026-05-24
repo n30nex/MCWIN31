@@ -36,6 +36,7 @@
 #include "hal/sdcard.h"
 #include "mesh/mesh_wrapper.h"
 #include "mesh/radio_profile.h"
+#include "ui/chrome.h"
 #include "ui/theme.h"
 #include "ui/navigation.h"
 #include "ui/home_screen.h"

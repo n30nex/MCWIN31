@@ -20,6 +20,7 @@
 #include "screens.h"
 #include "navigation.h"
 #include "theme.h"
+#include "chrome.h"
 #include "responsive.h"
 #include "home_screen.h"
 #include "../hal/tdeck_pins.h"
@@ -56,43 +57,16 @@ static lv_obj_t* make_screen_full(const char* title)
     apply_dark_bg(scr);
 
     // ── Top bar ──────────────────────────────────────────
-    lv_obj_t* top = lv_obj_create(scr);
-    lv_obj_set_size(top, LV_PCT(100), TOP_BAR_H);
-    lv_obj_align(top, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(top, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_bg_opa(top, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(top, 0, 0);
-    lv_obj_set_style_border_width(top, 0, 0);
-
-    lv_obj_t* back = lv_btn_create(top);
-    lv_obj_set_size(back, 24, TOP_BAR_H - 4);
+    lv_obj_t* top = chrome::create_title_bar(scr, TOP_BAR_H, title);
+    lv_obj_t* back = chrome::create_title_button(
+        top, LV_SYMBOL_LEFT, 24, TOP_BAR_H - 4,
+        [](lv_event_t*) { go_back(); },
+        can_go_back());
     lv_obj_align(back, LV_ALIGN_LEFT_MID, 2, 0);
-    apply_topbar_icon_btn(back);
-    if (can_go_back()) {
-        lv_obj_add_event_cb(back, [](lv_event_t*) { go_back(); }, LV_EVENT_CLICKED, nullptr);
-    }
-
-    lv_obj_t* back_icon = lv_label_create(back);
-    lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
-    lv_obj_set_style_text_color(back_icon,
-        lv_color_hex(can_go_back() ? TEXT_PRIMARY : TEXT_MUTED), 0);
-    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_12, 0);
-    lv_obj_center(back_icon);
 
     // Dynamic channel hashtags (snapshot at screen creation)
     char ch_buf[100] = "";
-    {
-        char names[8][32];
-        int n = slopos::mesh::exportChannels(names, 8);
-        int pos = 0;
-        for (int i = 0; i < n && pos < 90; i++) {
-            const char* nm = names[i];
-            pos += snprintf(ch_buf + pos, sizeof(ch_buf) - pos,
-                            "%s%s*  ", nm[0] == '#' ? "" : "#", nm);
-        }
-        while (pos > 0 && ch_buf[pos-1] == ' ') ch_buf[--pos] = '\0';
-        if (ch_buf[0] == '\0') snprintf(ch_buf, sizeof(ch_buf), "no channels");
-    }
+    chrome::build_channel_string(ch_buf, sizeof(ch_buf));
     lv_obj_t* ch_lbl = lv_label_create(top);
     lv_label_set_text(ch_lbl, ch_buf);
     lv_label_set_long_mode(ch_lbl, LV_LABEL_LONG_DOT);
@@ -103,90 +77,17 @@ static lv_obj_t* make_screen_full(const char* title)
 
     // Time (24h snapshot)
     {
-        uint32_t epoch = slopos::mesh::getCurrentTime();
         char t[8];
-        if (epoch == 0) {
-            snprintf(t, sizeof(t), "--:--");
-        } else {
-            uint32_t sec = epoch % 86400;
-            snprintf(t, sizeof(t), "%02d:%02d", (sec/3600)%24, (sec/60)%60);
-        }
+        chrome::format_current_time(t, sizeof(t));
         lv_obj_t* tl = lv_label_create(top);
         lv_label_set_text(tl, t);
-    lv_obj_set_style_text_color(tl, lv_color_hex(WIN31_HIGHLIGHT), 0);
+        lv_obj_set_style_text_color(tl, lv_color_hex(WIN31_HIGHLIGHT), 0);
         lv_obj_set_style_text_font(tl, &lv_font_montserrat_12, 0);
         lv_obj_align(tl, LV_ALIGN_RIGHT_MID, -4, 0);
     }
 
-    // Screen title (small, centered — sits behind channel text but visible when no channels)
-    if (title && title[0]) {
-        lv_obj_t* ttl = lv_label_create(top);
-        lv_label_set_text(ttl, title);
-        lv_obj_set_style_text_color(ttl, lv_color_hex(WIN31_HIGHLIGHT), 0);
-        lv_obj_set_style_text_font(ttl, &lv_font_montserrat_10, 0);
-        lv_obj_align(ttl, LV_ALIGN_CENTER, 0, 0);
-    }
-
-    // Top divider
-    lv_obj_t* tdiv = lv_obj_create(scr);
-    lv_obj_set_size(tdiv, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(tdiv, LV_ALIGN_TOP_MID, 0, TOP_BAR_H);
-    lv_obj_set_style_bg_color(tdiv, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(tdiv, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(tdiv, 0, 0);
-
-    // ── Bottom bar ───────────────────────────────────────
-    lv_obj_t* bot = lv_obj_create(scr);
-    lv_obj_set_size(bot, LV_PCT(100), BOT_BAR_H);
-    lv_obj_align(bot, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(bot, lv_color_hex(WIN31_FACE), 0);
-    lv_obj_set_style_bg_opa(bot, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(bot, 0, 0);
-    lv_obj_set_style_border_width(bot, 0, 0);
-
-    // Device name (left)
-    lv_obj_t* dev = lv_label_create(bot);
-    lv_label_set_text(dev, slopos::mesh::getOwnName());
-    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(dev, &lv_font_montserrat_10, 0);
-    lv_obj_align(dev, LV_ALIGN_LEFT_MID, 4, 0);
-
-    // Signal bars (center, snapshot)
-    {
-        int rssi = slopos::mesh::getLastRSSI();
-        const char* bars;
-        if (rssi > -70)       bars = "▂▄▆█";
-        else if (rssi > -85)  bars = "▂▄▆ ";
-        else if (rssi > -100) bars = "▂▄  ";
-        else if (rssi > -115) bars = "▂   ";
-        else                  bars = "    ";
-        lv_obj_t* sig = lv_label_create(bot);
-        lv_label_set_text(sig, bars);
-        lv_obj_set_style_text_color(sig, lv_color_hex(ACCENT), 0);
-        lv_obj_set_style_text_font(sig, &lv_font_montserrat_10, 0);
-        lv_obj_align(sig, LV_ALIGN_CENTER, -20, 0);
-    }
-
-    // Battery % (right, snapshot)
-    {
-        char batt[8];
-        int pct = slopos_battery_pct();
-        snprintf(batt, sizeof(batt), "%d%%", pct);
-        lv_obj_t* bl = lv_label_create(bot);
-        lv_label_set_text(bl, batt);
-        lv_obj_set_style_text_color(bl,
-            lv_color_hex(pct > 20 ? TEXT_PRIMARY : ACCENT_RED), 0);
-        lv_obj_set_style_text_font(bl, &lv_font_montserrat_10, 0);
-        lv_obj_align(bl, LV_ALIGN_RIGHT_MID, -4, 0);
-    }
-
-    // Bottom divider
-    lv_obj_t* bdiv = lv_obj_create(scr);
-    lv_obj_set_size(bdiv, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(bdiv, LV_ALIGN_TOP_MID, 0, DISPLAY_H - BOT_BAR_H - DIVIDER_H);
-    lv_obj_set_style_bg_color(bdiv, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(bdiv, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(bdiv, 0, 0);
+    chrome::create_divider(scr, TOP_BAR_H, DIVIDER_H);
+    chrome::create_status_bar(scr, DISPLAY_H, BOT_BAR_H, DIVIDER_H);
 
     return scr;
 }
@@ -311,16 +212,9 @@ void heard_screen_show()
             lv_obj_set_style_text_font(name_l, &lv_font_montserrat_10, 0);
             lv_obj_align(name_l, LV_ALIGN_LEFT_MID, col_name, 0);
 
-            // Signal bars
-            const char* bars;
-            if (c.rssi > -70)       bars = "▂▄▆█";
-            else if (c.rssi > -85)  bars = "▂▄▆ ";
-            else if (c.rssi > -100) bars = "▂▄  ";
-            else if (c.rssi > -115) bars = "▂   ";
-            else                    bars = "    ";
             lv_obj_t* sig_l = lv_label_create(row);
-            lv_label_set_text(sig_l, bars);
-            lv_obj_set_style_text_color(sig_l, lv_color_hex(ACCENT), 0);
+            lv_label_set_text(sig_l, chrome::signal_meter(c.rssi));
+            lv_obj_set_style_text_color(sig_l, lv_color_hex(TEXT_PRIMARY), 0);
             lv_obj_set_style_text_font(sig_l, &lv_font_montserrat_10, 0);
             lv_obj_align(sig_l, LV_ALIGN_LEFT_MID, col_sig, 0);
 

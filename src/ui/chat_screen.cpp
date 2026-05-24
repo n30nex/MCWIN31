@@ -20,6 +20,7 @@
 #include "chat_screen.h"
 #include "navigation.h"
 #include "theme.h"
+#include "chrome.h"
 #include "responsive.h"
 #include "../hal/tdeck_pins.h"
 #include "../hal/battery.h"
@@ -31,24 +32,7 @@
 namespace slopos::ui {
 
 using namespace theme;
-
-static constexpr lv_obj_flag_t no_scroll_flags()
-{
-    return (lv_obj_flag_t)(
-        LV_OBJ_FLAG_SCROLLABLE |
-        LV_OBJ_FLAG_SCROLL_ELASTIC |
-        LV_OBJ_FLAG_SCROLL_MOMENTUM |
-        LV_OBJ_FLAG_SCROLL_CHAIN |
-        LV_OBJ_FLAG_SCROLL_ON_FOCUS |
-        LV_OBJ_FLAG_SCROLL_WITH_ARROW);
-}
-
-static void disable_scroll(lv_obj_t* obj)
-{
-    lv_obj_remove_flag(obj, no_scroll_flags());
-    lv_obj_set_scroll_dir(obj, LV_DIR_NONE);
-    lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
-}
+using chrome::disable_scroll;
 
 static void stabilize_topbar_pill(lv_obj_t* obj)
 {
@@ -334,43 +318,16 @@ static lv_obj_t* make_chat_list_screen()
     apply_dark_bg(s);
 
     // Top bar
-    lv_obj_t* top = lv_obj_create(s);
-    lv_obj_set_size(top, LV_PCT(100), LIST_BAR_H);
-    lv_obj_align(top, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(top, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_bg_opa(top, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(top, 0, 0);
-    lv_obj_set_style_border_width(top, 0, 0);
-
-    lv_obj_t* back = lv_btn_create(top);
-    lv_obj_set_size(back, 24, LIST_BAR_H - 4);
+    lv_obj_t* top = chrome::create_title_bar(s, LIST_BAR_H, "Messages");
+    lv_obj_t* back = chrome::create_title_button(
+        top, LV_SYMBOL_LEFT, 24, LIST_BAR_H - 4,
+        [](lv_event_t*) { go_back(); },
+        can_go_back());
     lv_obj_align(back, LV_ALIGN_LEFT_MID, 2, 0);
-    apply_topbar_icon_btn(back);
-    if (can_go_back()) {
-        lv_obj_add_event_cb(back, [](lv_event_t*) { go_back(); }, LV_EVENT_CLICKED, nullptr);
-    }
-
-    lv_obj_t* back_icon = lv_label_create(back);
-    lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
-    lv_obj_set_style_text_color(back_icon,
-        lv_color_hex(can_go_back() ? ACCENT : TEXT_MUTED), 0);
-    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_12, 0);
-    lv_obj_center(back_icon);
 
     // Channel hashtags snapshot
     char ch_buf[100] = "";
-    {
-        char names[8][32];
-        int n = slopos::mesh::exportChannels(names, 8);
-        int pos = 0;
-        for (int i = 0; i < n && pos < 90; i++) {
-            const char* nm = names[i];
-            pos += snprintf(ch_buf + pos, sizeof(ch_buf) - pos,
-                            "%s%s*  ", nm[0] == '#' ? "" : "#", nm);
-        }
-        while (pos > 0 && ch_buf[pos-1] == ' ') ch_buf[--pos] = '\0';
-        if (ch_buf[0] == '\0') snprintf(ch_buf, sizeof(ch_buf), "no channels");
-    }
+    chrome::build_channel_string(ch_buf, sizeof(ch_buf));
     lv_obj_t* ch_lbl = lv_label_create(top);
     lv_label_set_text(ch_lbl, ch_buf);
     lv_label_set_long_mode(ch_lbl, LV_LABEL_LONG_DOT);
@@ -381,74 +338,17 @@ static lv_obj_t* make_chat_list_screen()
 
     // Time snapshot
     {
-        uint32_t epoch = slopos::mesh::getCurrentTime();
         char t[8];
-        if (epoch == 0) snprintf(t, sizeof(t), "--:--");
-        else {
-            uint32_t sec = epoch % 86400;
-            snprintf(t, sizeof(t), "%02d:%02d", (sec/3600)%24, (sec/60)%60);
-        }
+        chrome::format_current_time(t, sizeof(t));
         lv_obj_t* tl = lv_label_create(top);
         lv_label_set_text(tl, t);
-        lv_obj_set_style_text_color(tl, lv_color_hex(TEXT_PRIMARY), 0);
+        lv_obj_set_style_text_color(tl, lv_color_hex(WIN31_HIGHLIGHT), 0);
         lv_obj_set_style_text_font(tl, &lv_font_montserrat_12, 0);
         lv_obj_align(tl, LV_ALIGN_RIGHT_MID, -4, 0);
     }
 
-    // Top divider
-    lv_obj_t* tdiv = lv_obj_create(s);
-    lv_obj_set_size(tdiv, LV_PCT(100), LIST_DIV_H);
-    lv_obj_align(tdiv, LV_ALIGN_TOP_MID, 0, LIST_BAR_H);
-    lv_obj_set_style_bg_color(tdiv, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(tdiv, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(tdiv, 0, 0);
-
-    // Bottom bar
-    lv_obj_t* bot = lv_obj_create(s);
-    lv_obj_set_size(bot, LV_PCT(100), BOT_BAR_H);
-    lv_obj_align(bot, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(bot, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_bg_opa(bot, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(bot, 0, 0);
-    lv_obj_set_style_border_width(bot, 0, 0);
-
-    lv_obj_t* dev = lv_label_create(bot);
-    lv_label_set_text(dev, slopos::mesh::getOwnName());
-    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_SECONDARY), 0);
-    lv_obj_set_style_text_font(dev, &lv_font_montserrat_10, 0);
-    lv_obj_align(dev, LV_ALIGN_LEFT_MID, 4, 0);
-
-    {
-        int rssi = slopos::mesh::getLastRSSI();
-        const char* bars = rssi > -70  ? "▂▄▆█" :
-                           rssi > -85  ? "▂▄▆ " :
-                           rssi > -100 ? "▂▄  " :
-                           rssi > -115 ? "▂   " : "    ";
-        lv_obj_t* sig = lv_label_create(bot);
-        lv_label_set_text(sig, bars);
-        lv_obj_set_style_text_color(sig, lv_color_hex(ACCENT), 0);
-        lv_obj_set_style_text_font(sig, &lv_font_montserrat_10, 0);
-        lv_obj_align(sig, LV_ALIGN_CENTER, -20, 0);
-    }
-
-    {
-        char batt[8];
-        int pct = slopos_battery_pct();
-        snprintf(batt, sizeof(batt), "%d%%", pct);
-        lv_obj_t* bl = lv_label_create(bot);
-        lv_label_set_text(bl, batt);
-        lv_obj_set_style_text_color(bl, lv_color_hex(pct > 20 ? ACCENT : ACCENT_RED), 0);
-        lv_obj_set_style_text_font(bl, &lv_font_montserrat_10, 0);
-        lv_obj_align(bl, LV_ALIGN_RIGHT_MID, -4, 0);
-    }
-
-    // Bottom divider
-    lv_obj_t* bdiv = lv_obj_create(s);
-    lv_obj_set_size(bdiv, LV_PCT(100), LIST_DIV_H);
-    lv_obj_align(bdiv, LV_ALIGN_TOP_MID, 0, DISPLAY_H - BOT_BAR_H - LIST_DIV_H);
-    lv_obj_set_style_bg_color(bdiv, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(bdiv, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(bdiv, 0, 0);
+    chrome::create_divider(s, LIST_BAR_H, LIST_DIV_H);
+    chrome::create_status_bar(s, DISPLAY_H, BOT_BAR_H, LIST_DIV_H);
 
     return s;
 }
@@ -518,29 +418,14 @@ static void rebuild_channel_ribbon()
 // ════════════════════════════════════════════════════
 static void create_top_bar()
 {
-    top_bar = lv_obj_create(scr);
-    lv_obj_set_size(top_bar, LV_PCT(100), TOP_H);
-    lv_obj_align(top_bar, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(top_bar, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_bg_opa(top_bar, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(top_bar, 0, 0);
-    lv_obj_set_style_border_width(top_bar, 0, 0);
-    disable_scroll(top_bar);
+    top_bar = chrome::create_title_bar(scr, TOP_H, "");
 
     // ← back button → return to channel list
-    lv_obj_t* back = lv_btn_create(top_bar);
-    lv_obj_set_size(back, 24, TOP_H - 4);
+    lv_obj_t* back = chrome::create_title_button(
+        top_bar, LV_SYMBOL_LEFT, 24, TOP_H - 4,
+        [](lv_event_t*) { show_channel_list(LV_SCR_LOAD_ANIM_MOVE_RIGHT); },
+        true);
     lv_obj_align(back, LV_ALIGN_LEFT_MID, 2, 0);
-    apply_topbar_icon_btn(back);
-    lv_obj_t* bl = lv_label_create(back);
-    lv_label_set_text(bl, LV_SYMBOL_LEFT);
-    lv_obj_set_style_text_color(bl, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_text_font(bl, &lv_font_montserrat_12, 0);
-    lv_obj_center(bl);
-    disable_scroll(bl);
-    lv_obj_add_event_cb(back, [](lv_event_t*) {
-        show_channel_list(LV_SCR_LOAD_ANIM_MOVE_RIGHT);
-    }, LV_EVENT_CLICKED, nullptr);
 
     // Horizontal scrollable channel ribbon — exact width for no warp (matches home grid uniform sizing)
     int ribbon_w = CONTENT_W - 28 - 44; // back button + margins + time space
@@ -565,16 +450,11 @@ static void create_top_bar()
 
     // 24h time (right side)
     {
-        uint32_t epoch = slopos::mesh::getCurrentTime();
         char t[8];
-        if (epoch == 0) snprintf(t, sizeof(t), "--:--");
-        else {
-            uint32_t sec = epoch % 86400;
-            snprintf(t, sizeof(t), "%02d:%02d", (sec/3600)%24, (sec/60)%60);
-        }
+        chrome::format_current_time(t, sizeof(t));
         lv_obj_t* tl = lv_label_create(top_bar);
         lv_label_set_text(tl, t);
-        lv_obj_set_style_text_color(tl, lv_color_hex(TEXT_PRIMARY), 0);
+        lv_obj_set_style_text_color(tl, lv_color_hex(WIN31_HIGHLIGHT), 0);
         lv_obj_set_style_text_font(tl, &lv_font_montserrat_12, 0);
         lv_obj_align(tl, LV_ALIGN_RIGHT_MID, -4, 0);
     }
@@ -583,13 +463,7 @@ static void create_top_bar()
         create_channel_pill(channel_ribbon, i);
     }
 
-    // Divider
-    lv_obj_t* div = lv_obj_create(scr);
-    lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(div, LV_ALIGN_TOP_MID, 0, TOP_H);
-    lv_obj_set_style_bg_color(div, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div, 0, 0);
+    chrome::create_divider(scr, TOP_H, DIVIDER_H);
 }
 
 // ════════════════════════════════════════════════════
@@ -737,30 +611,21 @@ static void create_input_bar()
     input_bar = lv_obj_create(scr);
     lv_obj_set_size(input_bar, LV_PCT(100), INPUT_H);
     lv_obj_align(input_bar, LV_ALIGN_TOP_MID, 0, input_y + DIVIDER_H);
-    lv_obj_set_style_bg_color(input_bar, lv_color_hex(BG_SECONDARY), 0);
+    lv_obj_set_style_bg_color(input_bar, lv_color_hex(WIN31_FACE), 0);
     lv_obj_set_style_bg_opa(input_bar, LV_OPA_COVER, 0);
     lv_obj_set_style_pad_all(input_bar, 4, 0);
     lv_obj_set_style_border_width(input_bar, 0, 0);
     disable_scroll(input_bar);
 
-    lv_obj_t* div = lv_obj_create(scr);
-    lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(div, LV_ALIGN_TOP_MID, 0, input_y);
-    lv_obj_set_style_bg_color(div, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div, 0, 0);
+    chrome::create_divider(scr, input_y, DIVIDER_H);
 
     input_field = lv_textarea_create(input_bar);
     int field_w = CONTENT_W - 60; // match ribbon usable + send button room
     lv_obj_set_size(input_field, field_w, INPUT_H - 8);
     lv_obj_align(input_field, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_set_style_bg_color(input_field, lv_color_hex(BG_INPUT), 0);
-    lv_obj_set_style_bg_opa(input_field, LV_OPA_COVER, 0);
+    apply_pixel_input(input_field);
     lv_obj_set_style_text_color(input_field, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_set_style_text_font(input_field, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_border_width(input_field, 1, 0);
-    lv_obj_set_style_border_color(input_field, lv_color_hex(BG_TERTIARY), 0);
-    lv_obj_set_style_radius(input_field, 0, 0);
     lv_obj_set_style_pad_all(input_field, 4, 0);
     lv_textarea_set_one_line(input_field, true);
     lv_textarea_set_placeholder_text(input_field, "Message #channel");
@@ -771,15 +636,12 @@ static void create_input_bar()
     lv_obj_t* send_btn = lv_btn_create(input_bar);
     lv_obj_set_size(send_btn, 52, INPUT_H - 8);
     lv_obj_align(send_btn, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_style_bg_color(send_btn, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_bg_opa(send_btn, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(send_btn, 0, 0);
-    lv_obj_set_style_border_width(send_btn, 0, 0);
+    apply_pixel_btn(send_btn);
 
     lv_obj_t* send_label = lv_label_create(send_btn);
     lv_label_set_text(send_label, "Send");
     lv_obj_set_style_text_font(send_label, &lv_font_montserrat_10, 0);
-    lv_obj_set_style_text_color(send_label, lv_color_hex(0xffffff), 0);
+    lv_obj_set_style_text_color(send_label, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_center(send_label);
 
     lv_obj_add_event_cb(send_btn, [](lv_event_t*) { do_send(); },
@@ -794,46 +656,7 @@ static void create_input_bar()
 // ════════════════════════════════════════════════════
 static void create_bottom_bar()
 {
-    lv_obj_t* bot = lv_obj_create(scr);
-    lv_obj_set_size(bot, LV_PCT(100), BOT_BAR_H);
-    lv_obj_align(bot, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(bot, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_bg_opa(bot, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(bot, 0, 0);
-    lv_obj_set_style_border_width(bot, 0, 0);
-
-    lv_obj_t* dev = lv_label_create(bot);
-    lv_label_set_text(dev, slopos::mesh::getOwnName());
-    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_SECONDARY), 0);
-    lv_obj_set_style_text_font(dev, &lv_font_montserrat_10, 0);
-    lv_obj_align(dev, LV_ALIGN_LEFT_MID, 4, 0);
-
-    int rssi = slopos::mesh::getLastRSSI();
-    const char* bars = rssi > -70  ? "▂▄▆█" :
-                       rssi > -85  ? "▂▄▆ " :
-                       rssi > -100 ? "▂▄  " :
-                       rssi > -115 ? "▂   " : "    ";
-    lv_obj_t* sig = lv_label_create(bot);
-    lv_label_set_text(sig, bars);
-    lv_obj_set_style_text_color(sig, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_text_font(sig, &lv_font_montserrat_10, 0);
-    lv_obj_align(sig, LV_ALIGN_CENTER, -20, 0);
-
-    char batt_buf[8];
-    int pct = slopos_battery_pct();
-    snprintf(batt_buf, sizeof(batt_buf), "%d%%", pct);
-    lv_obj_t* bl = lv_label_create(bot);
-    lv_label_set_text(bl, batt_buf);
-    lv_obj_set_style_text_color(bl, lv_color_hex(pct > 20 ? ACCENT : ACCENT_RED), 0);
-    lv_obj_set_style_text_font(bl, &lv_font_montserrat_10, 0);
-    lv_obj_align(bl, LV_ALIGN_RIGHT_MID, -4, 0);
-
-    lv_obj_t* div = lv_obj_create(scr);
-    lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
-    lv_obj_align(div, LV_ALIGN_TOP_MID, 0, DISPLAY_H - BOT_BAR_H - DIVIDER_H);
-    lv_obj_set_style_bg_color(div, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div, 0, 0);
+    chrome::create_status_bar(scr, DISPLAY_H, BOT_BAR_H, DIVIDER_H);
 }
 
 // ════════════════════════════════════════════════════
