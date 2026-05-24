@@ -637,6 +637,63 @@ static void do_send()
 // ════════════════════════════════════════════════════
 // Input bar
 // ════════════════════════════════════════════════════
+struct QuickReply {
+    const char* label;
+    const char* text;
+};
+
+static constexpr QuickReply QUICK_REPLIES[] = {
+    {"OK",        "OK"},
+    {"On my way", "On my way"},
+    {"Need help", "Need help"},
+    {"At camp",  "At camp"},
+    {"Yes",      "Yes"},
+    {"No",       "No"},
+};
+
+static void quick_reply_cb(lv_event_t* e)
+{
+    const char* text = (const char*)lv_event_get_user_data(e);
+    if (input_field && text) {
+        lv_textarea_set_text(input_field, text);
+        lv_group_focus_obj(input_field);
+    }
+
+    lv_obj_t* btn = (lv_obj_t*)lv_event_get_current_target(e);
+    lv_obj_t* dlg = btn ? lv_obj_get_parent(btn) : nullptr;
+    if (dlg) lv_obj_del_async(dlg);
+}
+
+static void show_quick_replies(lv_obj_t* parent)
+{
+    auto dlg_sz = dialog_size(284, 144);
+    lv_obj_t* dlg = chrome::create_dialog_window(parent, dlg_sz.w, dlg_sz.h,
+                                                 "Quick Reply");
+
+    const int margin = 8;
+    const int gap = 6;
+    const int btn_w = (dlg_sz.w - margin * 2 - gap * 2) / 3;
+    const int btn_h = 28;
+
+    for (size_t i = 0; i < sizeof(QUICK_REPLIES) / sizeof(QUICK_REPLIES[0]); ++i) {
+        const int col = (int)(i % 3);
+        const int row = (int)(i / 3);
+        lv_obj_t* btn = chrome::create_dialog_button(
+            dlg, QUICK_REPLIES[i].label, btn_w, btn_h,
+            WIN31_FACE, TEXT_PRIMARY, quick_reply_cb,
+            (void*)QUICK_REPLIES[i].text);
+        lv_obj_align(btn, LV_ALIGN_TOP_LEFT,
+                     margin + col * (btn_w + gap), 32 + row * 34);
+    }
+
+    lv_obj_t* cancel = chrome::create_dialog_button(
+        dlg, "Cancel", 84, 26, WIN31_FACE, TEXT_PRIMARY,
+        [](lv_event_t* e) {
+            lv_obj_del_async(lv_obj_get_parent((lv_obj_t*)lv_event_get_current_target(e)));
+        });
+    lv_obj_align(cancel, LV_ALIGN_BOTTOM_RIGHT, -8, -8);
+}
+
 static void create_input_bar()
 {
     int input_y = DISPLAY_H - BOT_BAR_H - INPUT_H - DIVIDER_H;
@@ -653,7 +710,8 @@ static void create_input_bar()
     chrome::create_divider(scr, input_y, DIVIDER_H);
 
     input_field = lv_textarea_create(input_bar);
-    int field_w = CONTENT_W - 60; // match ribbon usable + send button room
+    int field_w = CONTENT_W - 96; // room for quick reply and send buttons
+    if (field_w < 150) field_w = 150;
     lv_obj_set_size(input_field, field_w, INPUT_H - 8);
     lv_obj_align(input_field, LV_ALIGN_LEFT_MID, 0, 0);
     apply_pixel_input(input_field);
@@ -665,6 +723,21 @@ static void create_input_bar()
     lv_obj_remove_flag(input_field, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_style_outline_width(input_field, 0, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_width(input_field, 0, (lv_state_t)(LV_STATE_FOCUSED | LV_STATE_EDITED));
+
+    lv_obj_t* quick_btn = lv_btn_create(input_bar);
+    lv_obj_set_size(quick_btn, 34, INPUT_H - 8);
+    lv_obj_align(quick_btn, LV_ALIGN_RIGHT_MID, -56, 0);
+    apply_pixel_btn(quick_btn);
+
+    lv_obj_t* quick_label = lv_label_create(quick_btn);
+    lv_label_set_text(quick_label, "QR");
+    lv_obj_set_style_text_font(quick_label, &lv_font_montserrat_10, 0);
+    lv_obj_set_style_text_color(quick_label, lv_color_hex(TEXT_PRIMARY), 0);
+    lv_obj_center(quick_label);
+
+    lv_obj_add_event_cb(quick_btn, [](lv_event_t*) {
+        show_quick_replies(scr);
+    }, LV_EVENT_CLICKED, nullptr);
 
     lv_obj_t* send_btn = lv_btn_create(input_bar);
     lv_obj_set_size(send_btn, 52, INPUT_H - 8);

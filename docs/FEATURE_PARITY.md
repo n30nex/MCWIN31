@@ -10,7 +10,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | MeshCore protocol integration | Partial | Preserved from SlopOS; TX now gated until Radio Setup is saved. |
 | T-Deck HAL | Partial | Display, touch, keyboard, trackball, battery, GPS, SD preserved. |
 | Home screen | Partial | Program Manager-style shell added; Messages badge now reflects unread chat count. |
-| Chat screen | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome; unread total exposed to home. |
+| Chat screen | Partial | Existing behavior retained; add-channel and quick-reply dialogs use shared Win31 chrome; unread total exposed to home. |
 | Contacts and heard lists | Partial | Existing behavior retained. |
 | Channels | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome. |
 | Map | Partial | Existing renderer retained. |
@@ -27,7 +27,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Status bar device, transport, battery/duty cycle | Partial | Shared status bars show device, RX/TX frequency, signal, `DC--`/`DC0%`, and battery. Airtime accounting pending. |
 | Unread channel and DM indicators | Partial | Channel list badges existed; Program Manager Messages badge now shows live unread total. DM-specific unread pending. |
 | DM/channel message metadata | Partial | Received messages now carry and render RSSI/SNR; path, hops, delivery state, and repeater hints pending. |
-| Quick replies with variables | Todo | Not implemented yet. |
+| Quick replies with variables | Partial | Canned quick replies can populate the chat compose field; template variables and per-channel presets pending. |
 | Telemetry request/history | Todo | Not implemented yet. |
 | Raw RX log and parsed packet detail | Todo | Not implemented yet. |
 | Ping and neighbor scan helpers | Todo | Trace path exists; ping/scan parity pending. |
