@@ -3,144 +3,116 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2025 Ben
 //
-// This file is part of SlopOS-TDeck.
-//
-// SlopOS-TDeck is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// SlopOS-TDeck is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with SlopOS-TDeck.  If not, see <https://www.gnu.org/licenses/>.
+// MCWIN31 keeps the upstream GPL firmware base and replaces the product UI
+// with original Windows 3.1-inspired primitives.
 
 #include <lvgl.h>
 
-// SlopOS Pixel Theme — Discord-inspired palette with blocky pixel styling
 namespace slopos::theme {
 
-// ── Backgrounds ─────────────────────────────────────────
-constexpr uint32_t BG_PRIMARY   = 0x0f0f0f;  // deep black
-constexpr uint32_t BG_SECONDARY = 0x181818;  // status bars
-constexpr uint32_t BG_TERTIARY  = 0x1e1e1e;  // card/icon tile background
-constexpr uint32_t BG_INPUT     = 0x252525;  // input field
+constexpr uint32_t WIN31_DESKTOP        = 0x008080;
+constexpr uint32_t WIN31_FACE           = 0xc0c0c0;
+constexpr uint32_t WIN31_HIGHLIGHT      = 0xffffff;
+constexpr uint32_t WIN31_SHADOW         = 0x808080;
+constexpr uint32_t WIN31_DARK_SHADOW    = 0x000000;
+constexpr uint32_t WIN31_TITLE          = 0x000080;
+constexpr uint32_t WIN31_TITLE_INACTIVE = 0x808080;
+constexpr uint32_t WIN31_SELECTION      = 0x000080;
+constexpr uint32_t WIN31_ALERT          = 0xffff00;
 
-// ── Accent ──────────────────────────────────────────────
-constexpr uint32_t ACCENT       = 0x00bfff;  // bright cyan
-constexpr uint32_t ACCENT_HOVER = 0x00a5e0;
-constexpr uint32_t ACCENT_GREEN = 0x3ba55d;
-constexpr uint32_t ACCENT_RED   = 0xed4245;
-constexpr uint32_t ACCENT_ORANGE= 0xfaa61a;
-constexpr uint32_t ACCENT_YELLOW= 0xfee75c;
+constexpr uint32_t BG_PRIMARY   = WIN31_DESKTOP;
+constexpr uint32_t BG_SECONDARY = WIN31_TITLE;
+constexpr uint32_t BG_TERTIARY  = WIN31_FACE;
+constexpr uint32_t BG_INPUT     = WIN31_HIGHLIGHT;
 
-// ── Message bubbles ──────────────────────────────────────
-constexpr uint32_t MSG_INCOMING = 0x3a4560;
+constexpr uint32_t ACCENT        = WIN31_FACE;
+constexpr uint32_t ACCENT_HOVER  = WIN31_SHADOW;
+constexpr uint32_t ACCENT_GREEN  = 0x008000;
+constexpr uint32_t ACCENT_RED    = 0x800000;
+constexpr uint32_t ACCENT_ORANGE = 0x808000;
+constexpr uint32_t ACCENT_YELLOW = WIN31_ALERT;
 
-// ── Text ────────────────────────────────────────────────
-constexpr uint32_t TEXT_PRIMARY   = 0xf2f3f5;
-constexpr uint32_t TEXT_SECONDARY = 0x949ba4;
-constexpr uint32_t TEXT_MUTED     = 0x6b7078;
-constexpr uint32_t TEXT_LINK      = 0x00aff4;
+constexpr uint32_t MSG_INCOMING = WIN31_HIGHLIGHT;
 
-// ── Channel colors ──────────────────────────────────────
-constexpr uint32_t CHANNEL_HASH   = 0x00bfff;
-constexpr uint32_t CHANNEL_ACTIVE = 0xffffff;
+constexpr uint32_t TEXT_PRIMARY   = 0x000000;
+constexpr uint32_t TEXT_SECONDARY = 0x202020;
+constexpr uint32_t TEXT_MUTED     = 0x606060;
+constexpr uint32_t TEXT_LINK      = 0x0000ff;
 
-// ── Structural ───────────────────────────────────────────
-constexpr uint32_t DIVIDER        = 0x2a2a2a;
+constexpr uint32_t CHANNEL_HASH   = WIN31_HIGHLIGHT;
+constexpr uint32_t CHANNEL_ACTIVE = WIN31_SELECTION;
+constexpr uint32_t DIVIDER        = WIN31_DARK_SHADOW;
 
-// ── Pixel border width ───────────────────────────────────
-constexpr int32_t PIXEL_BORDER    = 2;
+constexpr int32_t PIXEL_BORDER = 2;
 
-// ── Apply dark background to an object ──────────────────
 inline void apply_dark_bg(lv_obj_t* obj) {
     lv_obj_set_style_bg_color(obj, lv_color_hex(BG_PRIMARY), 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
 }
 
-// ── Shared keyboard/trackball focus treatment ───────────
 inline void apply_focus_style(lv_obj_t* obj) {
-    lv_obj_set_style_border_color(obj, lv_color_hex(ACCENT_YELLOW), LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(obj, lv_color_hex(WIN31_ALERT), LV_STATE_FOCUSED);
 }
 
-// ── Pixel card style (0-radius, dark bg, 2px border) ────
-inline void apply_pixel_card(lv_obj_t* obj) {
-    lv_obj_set_style_bg_color(obj, lv_color_hex(BG_TERTIARY), 0);
+inline void apply_win31_face(lv_obj_t* obj) {
+    lv_obj_set_style_bg_color(obj, lv_color_hex(WIN31_FACE), 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(obj, 0, 0);
-    lv_obj_set_style_border_width(obj, PIXEL_BORDER, 0);
-    lv_obj_set_style_border_color(obj, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_pad_all(obj, 6, 0);
-    apply_focus_style(obj);
-}
-
-// ── Pixel card with accent border ───────────────────────
-inline void apply_pixel_card_accent(lv_obj_t* obj) {
-    apply_pixel_card(obj);
-    lv_obj_set_style_border_color(obj, lv_color_hex(ACCENT), 0);
-}
-
-// ── Pixel button (filled) ───────────────────────────────
-inline void apply_pixel_btn(lv_obj_t* obj) {
-    lv_obj_set_style_bg_color(obj, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(obj, 0, 0);
-    lv_obj_set_style_border_width(obj, PIXEL_BORDER, 0);
-    lv_obj_set_style_border_color(obj, lv_color_hex(ACCENT_HOVER), 0);
-    lv_obj_set_style_pad_all(obj, 6, 0);
-    apply_focus_style(obj);
-}
-
-// ── Pixel button (outline) ──────────────────────────────
-inline void apply_pixel_btn_outline(lv_obj_t* obj) {
-    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_radius(obj, 0, 0);
-    lv_obj_set_style_border_width(obj, PIXEL_BORDER, 0);
-    lv_obj_set_style_border_color(obj, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_pad_all(obj, 6, 0);
-    apply_focus_style(obj);
-}
-
-// ── Top-bar icon button ─────────────────────────────────
-inline void apply_topbar_icon_btn(lv_obj_t* obj) {
-    lv_obj_set_style_bg_color(obj, lv_color_hex(BG_TERTIARY), 0);
-    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-    lv_obj_set_style_bg_color(obj, lv_color_hex(DIVIDER), LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_STATE_PRESSED);
     lv_obj_set_style_radius(obj, 0, 0);
     lv_obj_set_style_border_width(obj, 1, 0);
-    lv_obj_set_style_border_color(obj, lv_color_hex(DIVIDER), 0);
-    lv_obj_set_style_pad_all(obj, 0, 0);
+    lv_obj_set_style_border_color(obj, lv_color_hex(WIN31_DARK_SHADOW), 0);
+}
+
+inline void apply_pixel_card(lv_obj_t* obj) {
+    apply_win31_face(obj);
+    lv_obj_set_style_pad_all(obj, 6, 0);
     apply_focus_style(obj);
 }
 
-// ── Pixel input field ───────────────────────────────────
+inline void apply_pixel_card_accent(lv_obj_t* obj) {
+    apply_pixel_card(obj);
+    lv_obj_set_style_border_width(obj, PIXEL_BORDER, 0);
+    lv_obj_set_style_border_color(obj, lv_color_hex(WIN31_SELECTION), 0);
+}
+
+inline void apply_pixel_btn(lv_obj_t* obj) {
+    apply_win31_face(obj);
+    lv_obj_set_style_bg_color(obj, lv_color_hex(WIN31_HIGHLIGHT), LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_pad_all(obj, 6, 0);
+    apply_focus_style(obj);
+}
+
+inline void apply_pixel_btn_outline(lv_obj_t* obj) {
+    apply_win31_face(obj);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_pad_all(obj, 6, 0);
+    apply_focus_style(obj);
+}
+
+inline void apply_topbar_icon_btn(lv_obj_t* obj) {
+    apply_pixel_btn(obj);
+    lv_obj_set_style_pad_all(obj, 0, 0);
+}
+
 inline void apply_pixel_input(lv_obj_t* obj) {
     lv_obj_set_style_bg_color(obj, lv_color_hex(BG_INPUT), 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(obj, 0, 0);
-    lv_obj_set_style_border_width(obj, PIXEL_BORDER, 0);
-    lv_obj_set_style_border_color(obj, lv_color_hex(DIVIDER), 0);
+    lv_obj_set_style_border_width(obj, 1, 0);
+    lv_obj_set_style_border_color(obj, lv_color_hex(WIN31_DARK_SHADOW), 0);
     lv_obj_set_style_pad_all(obj, 6, 0);
     apply_focus_style(obj);
 }
 
-// ── Pixel badge (small accent label) ────────────────────
 inline void apply_pixel_badge(lv_obj_t* obj) {
-    lv_obj_set_style_bg_color(obj, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_bg_opa(obj, LV_OPA_30, 0);
+    lv_obj_set_style_bg_color(obj, lv_color_hex(WIN31_ALERT), 0);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(obj, 0, 0);
     lv_obj_set_style_border_width(obj, 1, 0);
-    lv_obj_set_style_border_color(obj, lv_color_hex(ACCENT), 0);
+    lv_obj_set_style_border_color(obj, lv_color_hex(WIN31_DARK_SHADOW), 0);
     lv_obj_set_style_pad_all(obj, 2, 0);
 }
 
-// ── Legacy card style (kept for compatibility) ──────────
-// Use apply_pixel_card() for new code.
 inline void apply_card_style(lv_obj_t* obj) {
     apply_pixel_card(obj);
 }

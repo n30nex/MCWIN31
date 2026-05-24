@@ -1,277 +1,72 @@
-# SlopOS T-Deck
+# MCWIN31 T-Deck Plus
 
-**Status: Beta testing** — several users have flashed successfully. See [Known Issues](#known-issues) below.
+MCWIN31 is custom firmware for the LilyGO T-Deck Plus with a Windows 3.1-inspired interface on top of MeshCore. It is derived from the GPL-3.0 [SlopOS T-Deck](https://github.com/hermes-gadget/SlopOS-tdeck) source base and uses [MC Term](https://github.com/dabeani/meshcoreterm) as a feature-parity reference.
 
-Standalone off-grid LoRa mesh messaging firmware for the **LilyGo T-Deck** (ESP32-S3 + SX1262 + ST7789 240×320 TFT touchscreen + physical QWERTY keyboard).
-
-Built on the [MeshCore](https://github.com/meshcore-dev/MeshCore) mesh networking protocol — fully interoperable with existing MeshCore repeaters, room servers, and companion radios.
+The goal is a practical handheld mesh terminal: Program Manager-style home screen, gray beveled controls, blue title bars, compact modal dialogs, keyboard/trackball/touch input, and MeshCore messaging features that remain interoperable with existing MeshCore nodes.
 
 ## Status
 
-| Feature | Status |
-|---------|--------|
-| Dark Discord-like UI (LVGL v9) | ✅ Complete |
-| Home screen (3×4 icon grid + status bars) | ✅ Complete |
-| Chat screen (channel list, message bubbles, text input) | ✅ Complete |
-| Heard / Contacts / Repeaters screens | ✅ Complete |
-| Signal / Noise diagnostic screens | ✅ Complete |
-| Map (offline tiles placeholder) | ✅ Complete |
-| Settings / Terminal / Trace screens | ✅ Complete |
-| Finder / Advertise screens | ✅ Complete |
-| MeshCore protocol (radio, routing, encryption) | ✅ Integrated |
-| T-Deck HAL (display, battery, LoRa, pins) | ✅ Complete |
-| Unit tests (12 modules) | ✅ 161 tests |
-| Touch input driver (GT911) | ✅ Complete |
-| Keyboard input driver (I2C, ESP32-C3 MCU) | ✅ Complete |
-| Full mesh messaging (send/receive queue + UI integration) | ✅ Complete |
-| GPS NMEA parser | ✅ Complete |
-| SD card support (SPI mount, read/write) | ✅ Complete |
-| Offline map renderer (tile math + LVGL canvas grid) | ✅ Complete |
+| Area | Status |
+|------|--------|
+| Public fork under `n30nex/MCWIN31` | Done |
+| PlatformIO firmware build env | `MCWIN31_TDeck` |
+| Windows 3.1 theme primitives | Initial |
+| Program Manager home screen | Initial |
+| US/CA 902-928 MHz profile | Initial |
+| TX gating until Radio Setup is saved | Initial |
+| SlopOS feature preservation | In progress |
+| MC Term feature parity | Tracked in `docs/FEATURE_PARITY.md` |
 
-## Test Suite
+## Build
 
-```bash
-# Run all 161 tests on native platform (no hardware needed)
-pio test -e native_test -v
-
-# Run a specific test module
-pio test -e native_test -f test_battery -v
+```powershell
+pio run -e MCWIN31_TDeck
 ```
 
-| Test Module | Tests | What's Covered |
-|-------------|-------|----------------|
-| `test_touch` | 22 | GT911 coordinate mapping, multitouch parsing, press→release lifecycle |
-| `test_keyboard` | 19 | Matrix scan, keymap, debounce, ghost detection, LVGL mapping |
-| `test_battery` | 16 | mV→% conversion, clamping, monotonicity, edge cases, ADC math |
-| `test_sdcard` | 15 | SPI init, mount, read/write, directory listing, edge cases |
-| `test_mesh_messaging` | 15 | Message queue, send/receive, channel ops, contact export |
-| `test_map` | 14 | Tile math (lat/lon→tile), zoom levels, bounding box |
-| `test_mesh_wrapper` | 13 | API signatures, return value ranges, unread count init |
-| `test_navigation` | 12 | Forward/back with history stack, deep nav chains, all pairs |
-| `test_gps` | 12 | NMEA parsing, coordinate conversion, fix detection |
-| `test_pins` | 9 | GPIO ranges, SPI/I2C bus conflicts, duplicate detection, LoRa params |
-| `test_theme` | 7 | Color darkness, vibrancy, distinctness, readability hierarchy |
-| `test_build` | 7 | All headers compile together, cross-module API consistency |
+Compatibility aliases remain while the fork still carries upstream internals:
 
-Full test documentation: [`test/README.md`](test/README.md)
+```powershell
+pio run -e SlopOS_TDeck
+```
+
+## Test
+
+```powershell
+pio test -e native_test -v
+```
+
+## Flash And Monitor
+
+Connect the T-Deck Plus over USB, confirm the port, then upload:
+
+```powershell
+pio device list
+pio run -e MCWIN31_TDeck -t upload
+pio device monitor -b 115200
+```
+
+On first boot, MCWIN31 uses the US/CA receive/UI radio profile but does not transmit until Radio Setup is saved on-device. Confirm local rules before enabling TX.
+
+## Roadmap
+
+The implementation roadmap and feature checklist live in:
+
+- `docs/ROADMAP.md`
+- `docs/FEATURE_PARITY.md`
 
 ## Hardware
 
 | Component | Detail |
 |-----------|--------|
-| MCU | ESP32-S3, 240 MHz, 16 MB Flash, 8 MB PSRAM |
-| Display | ST7789 240×320 TFT (landscape via rotation) |
-| Touch | GT911 capacitive (I2C) |
-| Keyboard | Physical QWERTY matrix |
-| LoRa | SX1262 (SPI) |
-| GPS | Serial1 (optional) |
-| SD Card | SPI (shared bus) |
+| MCU | ESP32-S3, 16 MB flash, PSRAM |
+| Display | ST7789 320x240 TFT |
+| Touch | GT911 capacitive touch |
+| Keyboard | T-Deck physical keyboard |
+| Navigation | Trackball/button |
+| LoRa | SX1262 |
+| GPS | Serial1, 38400 baud |
+| Storage | microSD over SPI |
 
-## Architecture
+## Attribution And License
 
-```
-SlopOS-tdeck/
-├── firmware/               ← Pre-built merged binaries (flash at 0x0)
-├── lib/meshcore/           ← Git submodule: MeshCore protocol (routing, radio, encryption)
-├── src/
-│   ├── main.cpp            ← Boot sequence (board → display → mesh → UI)
-│   ├── lv_conf.h           ← LVGL v9 config (16-bit, partial render)
-│   ├── hal/
-│   │   ├── tdeck_pins.h    ← Complete T-Deck pinout + version string
-│   │   ├── tdeck_board.h   ← TDeckBoard :: mesh::MainBoard
-│   │   ├── display.cpp/h   ← LovyanGFX ST7789 + LVGL driver
-│   │   ├── battery.cpp/h   ← ADC battery (mV + %)
-│   │   ├── touch.cpp/h     ← GT911 touch controller (I2C)
-│   │   ├── keyboard.cpp/h  ← QWERTY matrix keyboard scanner
-│   │   ├── gps.cpp/h       ← NMEA GPS parser (Serial1)
-│   │   ├── sdcard.cpp/h    ← microSD card (SPI)
-│   │   └── prefs.cpp/h     ← NVS preferences (radio config, identity)
-│   ├── mesh/
-│   │   ├── mesh_wrapper.cpp/h  ← SX1262 radio init, RTC, mesh API
-│   │   └── slop_mesh.h     ← SlopMesh : mesh::Mesh subclass
-│   ├── app/
-│   │   └── map_renderer.cpp/h  ← Offline map tile renderer
-│   └── ui/
-│       ├── theme.h         ← Discord-inspired dark palette
-│       ├── home_screen.cpp/h   ← 3×4 icon grid + top/bottom bars
-│       ├── chat_screen.cpp/h   ← Discord-like chat (channels, bubbles, input)
-│       ├── screens.cpp/h   ← All 11 other screens
-│       ├── navigation.cpp/h    ← Screen routing with animations
-│       └── ui.cpp/h        ← Splash → Home transition
-├── boards/t-deck.json      ← PlatformIO board definition
-├── platformio.ini          ← Build config (ESP32-S3 + LVGL + MeshCore)
-└── test/                   ← Unit test directory (12 modules, 161 tests)
-```
-
-## Build & Flash
-
-### Prerequisites
-- [PlatformIO](https://platformio.org/) (VS Code extension or CLI)
-- LilyGo T-Deck with USB-C cable
-
-### Windows Setup
-
-Install everything from a PowerShell terminal:
-
-```powershell
-# 1. Git
-winget install Git.Git
-
-# 2. Python 3.12
-winget install Python.Python.3.12
-
-# 3. PlatformIO CLI
-pip install platformio
-
-# 4. CP210x USB driver (for T-Deck USB-to-UART)
-# Download from: https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
-# Unzip → right-click silabser.inf → Install
-#
-# Verify: Device Manager → Ports (COM & LPT) → "Silicon Labs CP210x USB to UART Bridge"
-```
-
-Restart your terminal after installing Python, then verify:
-
-```powershell
-git --version
-python --version
-pio --version
-```
-
-### Linux Setup
-
-```bash
-# Ubuntu/Debian
-sudo apt install git python3 python3-pip
-pip install platformio
-
-# Arch
-sudo pacman -S git python python-pip
-pip install platformio
-```
-
-No USB driver needed on Linux — the CP210x kernel module ships with the kernel.
-
-### macOS Setup
-
-```bash
-# Homebrew
-brew install git python platformio
-```
-
-No USB driver needed on macOS — the CP210x driver is built into the OS.
-
-### Clone with submodule
-
-```bash
-git clone --recurse-submodules https://github.com/hermes-gadget/SlopOS-tdeck.git
-cd SlopOS-tdeck
-```
-
-If `lib/meshcore/` is empty after clone, run:
-
-```bash
-git submodule update --init --recursive
-```
-
-### Build
-
-```bash
-pio run -e SlopOS_TDeck
-```
-
-First build downloads the ESP32-S3 toolchain (~800 MB). Subsequent builds are fast.
-
-### Flash
-
-Put the T-Deck in download mode: **hold the trackball button while plugging in USB** (or hold BOOT + tap RESET). The screen stays black — that's correct.
-
-```bash
-pio run -e SlopOS_TDeck -t upload
-```
-
-### Monitor
-
-```bash
-pio device monitor -b 115200
-```
-
-### Sanity Check
-
-After cloning, these files must exist or the build will fail:
-
-| File | Purpose |
-|------|---------|
-| `boards/t-deck.json` | Board definition (16 MB flash, QIO, ESP32-S3) |
-| `lib/meshcore/src/Mesh.h` | MeshCore submodule (must not be empty) |
-| `platformio.ini` | Build configuration |
-
-## Pre-built Firmware
-
-Pre-built merged binaries are in [`firmware/`](firmware/). Flash directly with esptool — no PlatformIO needed:
-
-```bash
-pip install esptool
-esptool.py --chip esp32s3 --port COM21 --baud 921600 \
-  --before default_reset --after hard_reset write_flash \
-  --flash_mode qio --flash_freq 80m --flash_size 16MB \
-  0x0 firmware/slopos-tdeck-merged.bin
-```
-
-See [`firmware/README.md`](firmware/README.md) for details.
-
-## Known Issues
-
-| Issue | Status |
-|-------|--------|
-| **No SD card = expected warning** | Normal — `[boot] INFO: No SD card detected` is not an error |
-| **GPS requires external antenna** | T-Deck GPS is weak without active antenna |
-| **Radio silent on first boot until configured** | By design — compile-time defaults may be illegal in some regions; user must open Settings → Radio Setup to enable TX |
-| **Map screen leaks PSRAM on repeated visits** | Fixed in next beta — added `slopos_map_deinit()` to free canvas, JPEG, and tile cache buffers |
-| **GPS parser parsed wrong fields since beta-0.1.12** | Fixed in next beta — off-by-one strtok skip shifted all fields; GPS lat/lon/time/altitude now correct |
-| **Mesh text over-read on corrupt packets** | Fixed in next beta — forced null-termination on incoming peer and group text payloads |
-
-## Recent Audit (Codex, May 2026)
-
-Round 1 — initial audit (274K tokens):
-- Found 15 issues; 8 confirmed real after cross-check
-- 2 CRITICAL + 6 HIGH fixed across `slop_mesh.h`, `mesh_wrapper.cpp`, `gps.cpp`, `map_renderer.cpp`
-
-Round 2 — review-back (108K tokens):
-- Found 9 additional issues; 5 confirmed actionable
-- CRITICAL: map image descriptor initialization, path validity via `Packet::copyPath`
-- HIGH: group text null-termination, JPEG output bounds, canvas allocation error path
-
-All fixes compiled and tested: **160/161 tests pass, ESP32 build SUCCESS (RAM 40.5%, Flash 15.9%)**
-
-## License
-
-GPL-3.0-or-later
-
-This project is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-Dependencies remain under their original licenses (MIT, FreeBSD, LGPL-2.1,
-zlib/libpng, BSD-3-Clause) — see [Open Source Acknowledgments](#open-source-acknowledgments)
-below for the full audit.
-
-## Open Source Acknowledgments
-
-This project builds on and incorporates open source software from the following projects:
-
-| Project | License | Usage in SlopOS |
-|---------|---------|-----------------|
-| [MeshCore](https://github.com/meshcore-dev/MeshCore) | MIT | Mesh networking protocol (submodule at `lib/meshcore/`). Also: RTC clock (`ESP32RTCClock`), auto-off display timer, deep sleep patterns, and `NodePrefs` struct — all adapted from MeshCore's companion radio firmware. |
-| [LilyGo T-Deck Keyboard_ESP32C3](https://github.com/Xinyuan-LilyGO/T-Deck) | MIT | I2C keyboard protocol reference — our `keyboard.cpp` driver is based on the command set and keymap from this firmware (© 2023 Shenzhen Xin Yuan Electronic Technology Co., Ltd) |
-| [LVGL](https://github.com/lvgl/lvgl) | MIT | Embedded GUI framework (v9.5) |
-| [LovyanGFX](https://github.com/lovyan03/LovyanGFX) | FreeBSD | Display driver for ST7789 TFT |
-| [RadioLib](https://github.com/jgromes/RadioLib) | MIT | SX1262 LoRa radio driver |
-| [Arduino Crypto](https://github.com/rweather/arduinolibs) | MIT | AES/SHA for MeshCore packet encryption |
-| [Google Test](https://github.com/google/googletest) | BSD-3-Clause | Unit testing framework |
-| [ed25519](https://github.com/orlp/ed25519) | zlib/libpng | Embedded Ed25519 crypto (Orson Peters) — bundled in MeshCore at `lib/meshcore/lib/ed25519/` |
-| [ESP32 Arduino Core](https://github.com/espressif/arduino-esp32) | LGPL-2.1 | ESP32-S3 hardware abstraction and Arduino framework (LGPL→GPLv2+ bridge compatible) |
-| [PlatformIO](https://github.com/platformio/platformio-core) | Apache 2.0 | Build system (not linked into firmware) |
-
-> **License compliance policy:** All external code must be verified against GPLv3 compatibility before inclusion. See the `open-source-licenses` skill for the full dependency audit and compatibility matrix.
+MCWIN31 is GPL-3.0-or-later because it is derived from SlopOS T-Deck. MeshCore and other dependencies retain their original licenses. See `LICENSE` and upstream acknowledgments in the fork history.

@@ -9,6 +9,7 @@
 #include "hal/tdeck_pins.h"
 #include "hal/gps.h"
 #include "hal/prefs.h"
+#include "radio_profile.h"
 #include "slop_mesh.h"
 
 #include <SPIFFS.h>
@@ -43,7 +44,12 @@ static StaticPoolPacketManager   pkt_mgr(16);
 static slopos::mesh::SlopMesh*   g_mesh = nullptr;
 
 static bool initialized = false;
-static char own_name[32] = "SlopOS";
+static char own_name[32] = "MCWIN31";
+
+static bool radio_tx_enabled()
+{
+    return slopos::prefs_get().configured;
+}
 
 // ════════════════════════════════════════════════════
 // Message queue
@@ -133,15 +139,17 @@ bool init(bool spiffs_ok)
 
     // ── Radio configuration: use compile-time defaults if not configured ──
     const slopos::NodePrefs& p = slopos::prefs_get();
-    float   freq     = p.configured ? p.freq  : LORA_FREQ;
-    float   bw       = p.configured ? p.bw    : LORA_BW;
-    int     sf       = p.configured ? p.sf    : LORA_SF;
-    int     cr       = p.configured ? p.cr    : LORA_CR;
-    int     tx_power = p.configured ? p.tx_power_dbm : LORA_TX_PWR;
+    const auto& profile = slopos::radio::default_profile();
+    float   freq     = p.configured ? p.freq  : profile.freq_mhz;
+    float   bw       = p.configured ? p.bw    : profile.bandwidth_khz;
+    int     sf       = p.configured ? p.sf    : profile.spreading_factor;
+    int     cr       = p.configured ? p.cr    : profile.coding_rate;
+    int     tx_power = p.configured ? p.tx_power_dbm : profile.tx_power_dbm;
 
     if (!p.configured) {
 #if defined(SLOPOS_DEBUG) && SLOPOS_DEBUG
-        Serial.println("[mesh] Using compile-time defaults — open Settings to customize");
+        Serial.printf("[mesh] Using %s receive defaults; TX is blocked until Radio Setup is saved\n",
+                      profile.name);
 #endif
     }
 
@@ -230,11 +238,11 @@ void loop()
 // ── Send ────────────────────────────────────────
 
 bool sendMessage(const char* dest, const char* text) {
-    return g_mesh ? g_mesh->sendTextTo(dest, text) : false;
+    return g_mesh && radio_tx_enabled() ? g_mesh->sendTextTo(dest, text) : false;
 }
 
 bool sendChannelMessage(const char* channel_name, const char* text) {
-    if (!g_mesh) return false;
+    if (!g_mesh || !radio_tx_enabled()) return false;
     // Find channel by name
     for (int i = 0; i < g_mesh->getChannelCount(); i++) {
         auto* ch = g_mesh->getChannel(i);
@@ -331,7 +339,7 @@ int getLastRSSI()     { return (int)radio_driver.getLastRSSI(); }
 float getLastSNR()    { return radio_driver.getLastSNR(); }
 
 bool sendAdvert() {
-    if (!g_mesh) return false;
+    if (!g_mesh || !radio_tx_enabled()) return false;
     if (slopos_gps_has_fix()) {
         g_mesh->broadcastAdvert(own_name,
             slopos_gps_latitude(), slopos_gps_longitude());

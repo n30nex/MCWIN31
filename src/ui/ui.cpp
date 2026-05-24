@@ -43,13 +43,13 @@ void init()
     theme::apply_dark_bg(splash_scr);
 
     lv_obj_t* logo = lv_label_create(splash_scr);
-    lv_label_set_text(logo, "SlopOS");
+    lv_label_set_text(logo, "MCWIN31");
     lv_obj_set_style_text_color(logo, lv_color_hex(theme::ACCENT), 0);
     lv_obj_set_style_text_font(logo, &lv_font_montserrat_24, 0);
     lv_obj_align(logo, LV_ALIGN_CENTER, 0, -16);
 
     lv_obj_t* sub = lv_label_create(splash_scr);
-    lv_label_set_text(sub, "T-Deck");
+    lv_label_set_text(sub, "T-Deck Plus");
     lv_obj_set_style_text_color(sub, lv_color_hex(theme::TEXT_SECONDARY), 0);
     lv_obj_set_style_text_font(sub, &lv_font_montserrat_14, 0);
     lv_obj_align(sub, LV_ALIGN_CENTER, 0, 16);
@@ -57,7 +57,7 @@ void init()
     // Loading bar
     lv_obj_t* bar = lv_obj_create(splash_scr);
     lv_obj_set_size(bar, DISPLAY_W * 2 / 3, 4);
-    lv_obj_set_style_bg_color(bar, lv_color_hex(theme::BG_TERTIARY), 0);
+    lv_obj_set_style_bg_color(bar, lv_color_hex(theme::WIN31_FACE), 0);
     lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(bar, 2, 0);
     lv_obj_set_style_border_width(bar, 0, 0);
@@ -65,7 +65,7 @@ void init()
 
     lv_obj_t* fill = lv_obj_create(bar);
     lv_obj_set_size(fill, DISPLAY_W / 5, 4);
-    lv_obj_set_style_bg_color(fill, lv_color_hex(theme::ACCENT), 0);
+    lv_obj_set_style_bg_color(fill, lv_color_hex(theme::WIN31_TITLE), 0);
     lv_obj_set_style_bg_opa(fill, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(fill, 2, 0);
     lv_obj_set_style_border_width(fill, 0, 0);

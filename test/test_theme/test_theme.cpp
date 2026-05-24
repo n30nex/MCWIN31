@@ -1,120 +1,59 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2025 Ben
-//
-// This file is part of SlopOS-TDeck.
-//
-// SlopOS-TDeck is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// SlopOS-TDeck is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with SlopOS-TDeck.  If not, see <https://www.gnu.org/licenses/>.
 
-
-/**
- * Unit tests for theme color constants
- * Validates the Discord-inspired dark palette
- */
 #include <gtest/gtest.h>
 #include <cstdint>
 
-// Include the actual theme header (compile-time constant validation)
 #include "ui/theme.h"
 
 namespace {
 
 class ThemeTest : public ::testing::Test {};
 
-// ── Background colors are dark ──────────────────────────
-TEST_F(ThemeTest, BackgroundColorsAreDark) {
+TEST_F(ThemeTest, Win31CorePaletteMatchesExpectedColors) {
     using namespace slopos::theme;
-    // All background colors should have low brightness (< 0x30 per channel)
-    auto is_dark = [](uint32_t c) {
-        return ((c >> 16) & 0xFF) < 0x30 &&
-               ((c >> 8)  & 0xFF) < 0x60 &&
-               (c & 0xFF)        <= 0x60;
-    };
-    EXPECT_TRUE(is_dark(BG_PRIMARY));
-    EXPECT_TRUE(is_dark(BG_SECONDARY));
-    EXPECT_TRUE(is_dark(BG_TERTIARY));
-    EXPECT_TRUE(is_dark(BG_INPUT));
+    EXPECT_EQ(WIN31_DESKTOP, 0x008080U);
+    EXPECT_EQ(WIN31_FACE, 0xc0c0c0U);
+    EXPECT_EQ(WIN31_HIGHLIGHT, 0xffffffU);
+    EXPECT_EQ(WIN31_SHADOW, 0x808080U);
+    EXPECT_EQ(WIN31_DARK_SHADOW, 0x000000U);
+    EXPECT_EQ(WIN31_TITLE, 0x000080U);
 }
 
-// ── Accent colors are vibrant ───────────────────────────
-TEST_F(ThemeTest, AccentColorsAreBright) {
+TEST_F(ThemeTest, PublicColorAliasesUseWin31Roles) {
     using namespace slopos::theme;
-    // Accent colors should have at least one channel > 0xA0
-    auto is_vibrant = [](uint32_t c) {
-        return ((c >> 16) & 0xFF) > 0xA0 ||
-               ((c >> 8)  & 0xFF) > 0xA0 ||
-               (c & 0xFF)        > 0xA0;
-    };
-    EXPECT_TRUE(is_vibrant(ACCENT));
-    EXPECT_TRUE(is_vibrant(ACCENT_GREEN));
-    EXPECT_TRUE(is_vibrant(ACCENT_RED));
-    EXPECT_TRUE(is_vibrant(ACCENT_ORANGE));
+    EXPECT_EQ(BG_PRIMARY, WIN31_DESKTOP);
+    EXPECT_EQ(BG_SECONDARY, WIN31_TITLE);
+    EXPECT_EQ(BG_TERTIARY, WIN31_FACE);
+    EXPECT_EQ(BG_INPUT, WIN31_HIGHLIGHT);
+    EXPECT_EQ(ACCENT, WIN31_FACE);
+    EXPECT_EQ(DIVIDER, WIN31_DARK_SHADOW);
 }
 
-// ── Text colors are readable ─────────────────────────────
-TEST_F(ThemeTest, TextColorsAreLight) {
-    using namespace slopos::theme;
-    auto is_light = [](uint32_t c) {
-        int sum = ((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF);
-        return sum > 350; // average > ~117 per channel
-    };
-    EXPECT_TRUE(is_light(TEXT_PRIMARY));
-}
-
-TEST_F(ThemeTest, MutedTextIsDimmerThanPrimary) {
+TEST_F(ThemeTest, TextColorsAreReadableOnWin31Controls) {
     using namespace slopos::theme;
     auto brightness = [](uint32_t c) {
         return ((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF);
     };
-    EXPECT_GT(brightness(TEXT_PRIMARY), brightness(TEXT_SECONDARY));
-    EXPECT_GT(brightness(TEXT_SECONDARY), brightness(TEXT_MUTED));
+    EXPECT_LT(brightness(TEXT_PRIMARY), brightness(WIN31_FACE));
+    EXPECT_LT(brightness(TEXT_SECONDARY), brightness(WIN31_FACE));
+    EXPECT_GT(brightness(WIN31_HIGHLIGHT), brightness(WIN31_TITLE));
 }
 
-// ── All constants are non-zero ──────────────────────────
-TEST_F(ThemeTest, AllConstantsNonZero) {
-    using namespace slopos::theme;
-    EXPECT_NE(BG_PRIMARY,     0U);
-    EXPECT_NE(BG_SECONDARY,   0U);
-    EXPECT_NE(BG_TERTIARY,    0U);
-    EXPECT_NE(BG_INPUT,       0U);
-    EXPECT_NE(ACCENT,         0U);
-    EXPECT_NE(ACCENT_HOVER,   0U);
-    EXPECT_NE(ACCENT_GREEN,   0U);
-    EXPECT_NE(ACCENT_RED,     0U);
-    EXPECT_NE(ACCENT_ORANGE,  0U);
-    EXPECT_NE(ACCENT_YELLOW,  0U);
-    EXPECT_NE(TEXT_PRIMARY,   0U);
-    EXPECT_NE(TEXT_SECONDARY, 0U);
-    EXPECT_NE(TEXT_MUTED,     0U);
-    EXPECT_NE(TEXT_LINK,      0U);
-    EXPECT_NE(CHANNEL_HASH,   0U);
-    EXPECT_NE(CHANNEL_ACTIVE, 0U);
-}
-
-// ── Color uniqueness ────────────────────────────────────
-TEST_F(ThemeTest, AccentColorsAreDistinct) {
+TEST_F(ThemeTest, AlertAndStateColorsAreDistinct) {
     using namespace slopos::theme;
     EXPECT_NE(ACCENT, ACCENT_GREEN);
     EXPECT_NE(ACCENT, ACCENT_RED);
     EXPECT_NE(ACCENT_GREEN, ACCENT_RED);
-    EXPECT_NE(ACCENT_ORANGE, ACCENT_YELLOW);
+    EXPECT_NE(ACCENT_YELLOW, WIN31_FACE);
+    EXPECT_NE(WIN31_TITLE, WIN31_TITLE_INACTIVE);
 }
 
-TEST_F(ThemeTest, BackgroundColorsAreDistinct) {
+TEST_F(ThemeTest, BorderAndSelectionConstantsAreValid) {
     using namespace slopos::theme;
-    EXPECT_NE(BG_PRIMARY, BG_SECONDARY);
-    EXPECT_NE(BG_PRIMARY, BG_TERTIARY);
-    EXPECT_NE(BG_SECONDARY, BG_TERTIARY);
+    EXPECT_EQ(PIXEL_BORDER, 2);
+    EXPECT_NE(WIN31_SELECTION, WIN31_FACE);
+    EXPECT_NE(WIN31_DARK_SHADOW, WIN31_HIGHLIGHT);
 }
 
 } // anonymous namespace

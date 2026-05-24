@@ -29,6 +29,7 @@
 #include "../hal/prefs.h"
 #include "../hal/keyboard.h"
 #include "../mesh/mesh_wrapper.h"
+#include "../mesh/radio_profile.h"
 #include "../app/map_renderer.h"
 #include <Arduino.h>
 #include <lvgl.h>
@@ -74,7 +75,7 @@ static lv_obj_t* make_screen_full(const char* title)
     lv_obj_t* back_icon = lv_label_create(back);
     lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
     lv_obj_set_style_text_color(back_icon,
-        lv_color_hex(can_go_back() ? ACCENT : TEXT_MUTED), 0);
+        lv_color_hex(can_go_back() ? TEXT_PRIMARY : TEXT_MUTED), 0);
     lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_12, 0);
     lv_obj_center(back_icon);
 
@@ -112,7 +113,7 @@ static lv_obj_t* make_screen_full(const char* title)
         }
         lv_obj_t* tl = lv_label_create(top);
         lv_label_set_text(tl, t);
-        lv_obj_set_style_text_color(tl, lv_color_hex(TEXT_PRIMARY), 0);
+    lv_obj_set_style_text_color(tl, lv_color_hex(WIN31_HIGHLIGHT), 0);
         lv_obj_set_style_text_font(tl, &lv_font_montserrat_12, 0);
         lv_obj_align(tl, LV_ALIGN_RIGHT_MID, -4, 0);
     }
@@ -121,7 +122,7 @@ static lv_obj_t* make_screen_full(const char* title)
     if (title && title[0]) {
         lv_obj_t* ttl = lv_label_create(top);
         lv_label_set_text(ttl, title);
-        lv_obj_set_style_text_color(ttl, lv_color_hex(TEXT_SECONDARY), 0);
+        lv_obj_set_style_text_color(ttl, lv_color_hex(WIN31_HIGHLIGHT), 0);
         lv_obj_set_style_text_font(ttl, &lv_font_montserrat_10, 0);
         lv_obj_align(ttl, LV_ALIGN_CENTER, 0, 0);
     }
@@ -138,7 +139,7 @@ static lv_obj_t* make_screen_full(const char* title)
     lv_obj_t* bot = lv_obj_create(scr);
     lv_obj_set_size(bot, LV_PCT(100), BOT_BAR_H);
     lv_obj_align(bot, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(bot, lv_color_hex(BG_SECONDARY), 0);
+    lv_obj_set_style_bg_color(bot, lv_color_hex(WIN31_FACE), 0);
     lv_obj_set_style_bg_opa(bot, LV_OPA_COVER, 0);
     lv_obj_set_style_pad_all(bot, 0, 0);
     lv_obj_set_style_border_width(bot, 0, 0);
@@ -146,7 +147,7 @@ static lv_obj_t* make_screen_full(const char* title)
     // Device name (left)
     lv_obj_t* dev = lv_label_create(bot);
     lv_label_set_text(dev, slopos::mesh::getOwnName());
-    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_SECONDARY), 0);
+    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_set_style_text_font(dev, &lv_font_montserrat_10, 0);
     lv_obj_align(dev, LV_ALIGN_LEFT_MID, 4, 0);
 
@@ -174,7 +175,7 @@ static lv_obj_t* make_screen_full(const char* title)
         lv_obj_t* bl = lv_label_create(bot);
         lv_label_set_text(bl, batt);
         lv_obj_set_style_text_color(bl,
-            lv_color_hex(pct > 20 ? ACCENT : ACCENT_RED), 0);
+            lv_color_hex(pct > 20 ? TEXT_PRIMARY : ACCENT_RED), 0);
         lv_obj_set_style_text_font(bl, &lv_font_montserrat_10, 0);
         lv_obj_align(bl, LV_ALIGN_RIGHT_MID, -4, 0);
     }
@@ -956,7 +957,7 @@ void settings_screen_show()
     }, LV_EVENT_CLICKED, nullptr);
 
     // Version
-    snprintf(buf, sizeof(buf), "  SlopOS " SLOPOS_VERSION);
+    snprintf(buf, sizeof(buf), "  MCWIN31 " SLOPOS_VERSION);
     add_row(LV_SYMBOL_HOME, buf);
 
     // Null the row pointers when this screen is deleted so stale pointers can't be used
@@ -1024,7 +1025,7 @@ void terminal_screen_show()
 
     // Boot header lines
     const slopos::NodePrefs& p = slopos::prefs_get();
-    term_add_line(log, "SlopOS T-Deck Terminal");
+    term_add_line(log, "MCWIN31 T-Deck Plus Terminal");
     term_add_line(log, "MeshCore protocol active");
     if (p.configured) {
         char radio_buf[64];
@@ -1384,19 +1385,21 @@ void radio_setup_screen_show()
 
     const slopos::NodePrefs& p = slopos::prefs_get();
 
-    static float s_freq = 869.618f;
+    const auto& default_profile = slopos::radio::default_profile();
+
+    static float s_freq = LORA_FREQ;
     static int   s_sf   = 8;
     static int   s_cr   = 5;
     static int   s_pwr  = 22;
-    s_freq = p.configured ? p.freq          : 869.618f;
-    s_sf   = p.configured ? p.sf            : 8;
-    s_cr   = p.configured ? p.cr            : 5;
-    s_pwr  = p.configured ? p.tx_power_dbm  : 22;
+    s_freq = p.configured ? p.freq          : default_profile.freq_mhz;
+    s_sf   = p.configured ? p.sf            : default_profile.spreading_factor;
+    s_cr   = p.configured ? p.cr            : default_profile.coding_rate;
+    s_pwr  = p.configured ? p.tx_power_dbm  : default_profile.tx_power_dbm;
 
     // Warning (2 lines — compact to save vertical space)
     auto* warn = lv_label_create(scr);
     lv_label_set_text(warn,
-        "Check local regulations. Incorrect settings may be illegal.");
+        "US/CA profile: 902-928 MHz. Save here to enable TX.");
     lv_obj_set_width(warn, CONTENT_W);
     lv_obj_set_style_pad_left(warn, 8, 0);
     lv_obj_set_style_pad_right(warn, 8, 0);
@@ -1407,10 +1410,10 @@ void radio_setup_screen_show()
 
     // Frequency presets (compact: 18px buttons, 20px spacing)
     static const struct { const char* label; float freq; } freqs[] = {
-        {"868.000 MHz (EU)", 868.000f},
-        {"869.525 MHz (UK)", 869.525f},
-        {"869.618 MHz (UK)", 869.618f},
-        {"915.000 MHz (US)", 915.000f},
+        {"915.000 MHz (US/CA)", 915.000f},
+        {"906.875 MHz (US/CA)", 906.875f},
+        {"918.125 MHz (US/CA)", 918.125f},
+        {"869.618 MHz (EU/UK)", 869.618f},
         {"433.500 MHz (EU)", 433.500f},
     };
 
@@ -1516,15 +1519,11 @@ void radio_setup_screen_show()
     lv_obj_center(svl);
     lv_obj_add_event_cb(save_btn, [](lv_event_t*) {
         slopos::NodePrefs np;
-        np.set_defaults();
+        slopos::radio::apply_profile(np, slopos::radio::default_profile(), "MCWIN31");
         np.freq         = s_freq;
-        np.bw           = 62.5f;
         np.sf           = (uint8_t)s_sf;
         np.cr           = (uint8_t)s_cr;
         np.tx_power_dbm = (int8_t)s_pwr;
-        np.configured   = true;
-        strncpy(np.node_name, "SlopOS T-Deck", sizeof(np.node_name) - 1);
-        np.node_name[sizeof(np.node_name) - 1] = '\0';
         slopos::prefs_set(np);
         slopos::prefs_save(np);
         ESP.restart();

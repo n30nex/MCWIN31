@@ -1,4 +1,4 @@
-# SlopOS T-Deck Test Suite
+# MCWIN31 T-Deck Plus Test Suite
 
 ## Running Tests
 

@@ -6,7 +6,7 @@
 
 namespace slopos {
 
-static constexpr const char* NVS_NS = "slopos";
+static constexpr const char* NVS_NS = "mcwin31";
 static NodePrefs g_prefs;
 
 bool prefs_load(NodePrefs& p) {

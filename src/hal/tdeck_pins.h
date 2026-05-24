@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU General Public License
 // along with SlopOS-TDeck.  If not, see <https://www.gnu.org/licenses/>.
 
-// SlopOS T-Deck Hardware Pin Definitions
+// MCWIN31 T-Deck Plus Hardware Pin Definitions
 // LilyGo T-Deck: ESP32-S3 + ST7789 320x240 + SX1262 LoRa + GT911 Touch
 
 // ════════════════════════════════════════════════════════
@@ -108,11 +108,24 @@
 // ════════════════════════════════════════════════════════
 // LoRa Radio Defaults
 // ════════════════════════════════════════════════════════
-#define LORA_FREQ    869.618f
-#define LORA_BW        62.5f
+#ifndef LORA_FREQ
+#define LORA_FREQ    915.000f
+#endif
+#ifndef LORA_BW
+#define LORA_BW       125.0f
+#endif
+#ifndef LORA_SF
 #define LORA_SF           8
+#endif
+#ifndef LORA_CR
 #define LORA_CR           5
-#define LORA_TX_PWR      22
+#endif
+#ifndef LORA_TX_POWER
+#define LORA_TX_POWER    20
+#endif
+#ifndef LORA_TX_PWR
+#define LORA_TX_PWR LORA_TX_POWER
+#endif
 
 // ════════════════════════════════════════════════════════
 // MeshCore expects P_ prefix for radio pins
@@ -126,4 +139,5 @@
 #define P_LORA_MOSI   PIN_LORA_MOSI
 
 // Firmware version — displayed in Settings > About
-#define SLOPOS_VERSION  "beta-0.1.30"
+#define MCWIN31_VERSION "0.1.0-dev"
+#define SLOPOS_VERSION  MCWIN31_VERSION

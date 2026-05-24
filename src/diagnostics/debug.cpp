@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2025 Ben
 //
-// Comprehensive debug module for SlopOS-TDeck.
-// Build with -D SLOPOS_DEBUG=1 (env:SlopOS_TDeck_debug in platformio.ini).
+// Comprehensive debug module for MCWIN31.
+// Build with -D SLOPOS_DEBUG=1 (env:MCWIN31_TDeck_debug in platformio.ini).
 //
 // Outputs to Serial at 115200 baud:
 //   - Periodic full system dumps every 5s

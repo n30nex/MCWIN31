@@ -23,7 +23,7 @@ void setup()
     Serial.begin(115200);
     delay(500);
 #if defined(SLOPOS_DEBUG) && SLOPOS_DEBUG
-    Serial.println("SlopOS T-Deck — booting...");
+    Serial.println("MCWIN31 T-Deck Plus booting...");
     Serial.println("[boot] step 1: serial OK");
 #endif
 
@@ -64,7 +64,7 @@ void setup()
     Serial.println("[boot] step 6: display init OK");
 #endif
 
-    slopos::mesh::setOwnName("SlopOS T-Deck");
+    slopos::mesh::setOwnName("MCWIN31");
     if (!slopos::mesh::init(spiffs_ok))
         Serial.println("[boot] WARNING: Radio init failed");
 #if defined(SLOPOS_DEBUG) && SLOPOS_DEBUG
@@ -83,7 +83,7 @@ void setup()
         slopos_map_init();
 
 #if defined(SLOPOS_DEBUG) && SLOPOS_DEBUG
-    Serial.println("[boot] === SlopOS T-Deck ready ===");
+    Serial.println("[boot] === MCWIN31 T-Deck Plus ready ===");
 #endif
 }
 

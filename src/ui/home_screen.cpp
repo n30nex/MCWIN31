@@ -56,18 +56,18 @@ struct IconDef {
 };
 
 static const IconDef icons[] = {
-    {"CHATS",     LV_SYMBOL_ENVELOPE,   true,  Screen::Chat},
-    {"CONTACTS",  LV_SYMBOL_CALL,       false, Screen::Contacts},
-    {"REPEATERS", LV_SYMBOL_WIFI,       false, Screen::Heard},
-    {"FINDER",    LV_SYMBOL_EYE_OPEN,   false, Screen::Network},
-    {"HEARD",     LV_SYMBOL_VOLUME_MID, false, Screen::Heard},
-    {"MAP",       LV_SYMBOL_GPS,        false, Screen::Map},
-    {"ADVERTISE", LV_SYMBOL_AUDIO,      false, Screen::Advertise},
-    {"SETTINGS",  LV_SYMBOL_SETTINGS,   false, Screen::Settings},
-    {"TRACE",     LV_SYMBOL_SHUFFLE,    false, Screen::Trace},
-    {"TERMINAL",  LV_SYMBOL_KEYBOARD,   false, Screen::Terminal},
-    {"NOISE",     LV_SYMBOL_VOLUME_MAX, false, Screen::Noise},
-    {"SIGNAL",    LV_SYMBOL_BARS,       false, Screen::Signal},
+    {"MESSAGES",  "[M]",  true,  Screen::Chat},
+    {"CONTACTS",  "[C]",  false, Screen::Contacts},
+    {"CHANNELS",  "[#]",  false, Screen::Channels},
+    {"MAP",       "[*]",  false, Screen::Map},
+    {"RADIO",     "[R]",  false, Screen::RadioSetup},
+    {"DIAG",      "[D]",  false, Screen::Signal},
+    {"HEARD",     "[H]",  false, Screen::Heard},
+    {"FINDER",    "[F]",  false, Screen::Network},
+    {"ADVERT",    "[A]",  false, Screen::Advertise},
+    {"TRACE",     "[T]",  false, Screen::Trace},
+    {"TERM",      "[>]",  false, Screen::Terminal},
+    {"SETTINGS",  "[S]",  false, Screen::Settings},
 };
 
 static constexpr int ICON_COUNT = sizeof(icons) / sizeof(icons[0]);
@@ -118,11 +118,11 @@ static void force_full_tile_redraw(int idx)
 static void apply_selection(int old_idx = -1)
 {
     if (old_idx >= 0 && old_idx < ICON_COUNT && icon_tiles[old_idx]) {
-        lv_obj_set_style_border_color(icon_tiles[old_idx], lv_color_hex(BG_PRIMARY), 0);
+        lv_obj_set_style_border_color(icon_tiles[old_idx], lv_color_hex(WIN31_FACE), 0);
         force_full_tile_redraw(old_idx);
     }
     if (selected_icon >= 0 && selected_icon < ICON_COUNT && icon_tiles[selected_icon]) {
-        lv_obj_set_style_border_color(icon_tiles[selected_icon], lv_color_hex(ACCENT), 0);
+        lv_obj_set_style_border_color(icon_tiles[selected_icon], lv_color_hex(WIN31_SELECTION), 0);
         force_full_tile_redraw(selected_icon);
     }
 
@@ -185,16 +185,23 @@ static void create_top_bar()
     top_bar = lv_obj_create(scr);
     lv_obj_set_size(top_bar, LV_PCT(100), TOP_BAR_H);
     lv_obj_align(top_bar, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(top_bar, lv_color_hex(BG_SECONDARY), 0);
+    lv_obj_set_style_bg_color(top_bar, lv_color_hex(WIN31_TITLE), 0);
     lv_obj_set_style_bg_opa(top_bar, LV_OPA_COVER, 0);
     lv_obj_set_style_pad_all(top_bar, 0, 0);
     lv_obj_set_style_border_width(top_bar, 0, 0);
 
     // ≡ hamburger using LVGL symbol font (reliable on all builds)
-    lv_obj_t* menu_icon = lv_label_create(top_bar);
-    lv_label_set_text(menu_icon, LV_SYMBOL_LIST);
-    lv_obj_set_style_text_color(menu_icon, lv_color_hex(TEXT_SECONDARY), 0);
-    lv_obj_align(menu_icon, LV_ALIGN_LEFT_MID, 4, 0);
+    lv_obj_t* control = lv_label_create(top_bar);
+    lv_label_set_text(control, "[]");
+    lv_obj_set_style_text_color(control, lv_color_hex(WIN31_HIGHLIGHT), 0);
+    lv_obj_set_style_text_font(control, &lv_font_montserrat_10, 0);
+    lv_obj_align(control, LV_ALIGN_LEFT_MID, 4, 0);
+
+    lv_obj_t* title = lv_label_create(top_bar);
+    lv_label_set_text(title, "MCWIN31 Program Manager");
+    lv_obj_set_style_text_color(title, lv_color_hex(WIN31_HIGHLIGHT), 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
+    lv_obj_align(title, LV_ALIGN_CENTER, 0, 0);
 
     // Dynamic channel hashtags
     char ch_buf[120];
@@ -202,15 +209,15 @@ static void create_top_bar()
     hashtag_label = lv_label_create(top_bar);
     lv_label_set_text(hashtag_label, ch_buf);
     lv_label_set_long_mode(hashtag_label, LV_LABEL_LONG_DOT);
-    lv_obj_set_width(hashtag_label, HASHTAG_LABEL_W());
-    lv_obj_set_style_text_color(hashtag_label, lv_color_hex(CHANNEL_HASH), 0);
+    lv_obj_set_width(hashtag_label, 70);
+    lv_obj_set_style_text_color(hashtag_label, lv_color_hex(WIN31_HIGHLIGHT), 0);
     lv_obj_set_style_text_font(hashtag_label, &lv_font_montserrat_10, 0);
-    lv_obj_align(hashtag_label, LV_ALIGN_LEFT_MID, 26, 0);
+    lv_obj_align(hashtag_label, LV_ALIGN_LEFT_MID, 24, 0);
 
     // Time (far right)
     time_label = lv_label_create(top_bar);
     lv_label_set_text(time_label, "--:--");
-    lv_obj_set_style_text_color(time_label, lv_color_hex(TEXT_PRIMARY), 0);
+    lv_obj_set_style_text_color(time_label, lv_color_hex(WIN31_HIGHLIGHT), 0);
     lv_obj_set_style_text_font(time_label, &lv_font_montserrat_12, 0);
     lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, -4, 0);
 
@@ -218,7 +225,7 @@ static void create_top_bar()
     lv_obj_t* div = lv_obj_create(scr);
     lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
     lv_obj_align(div, LV_ALIGN_TOP_MID, 0, TOP_BAR_H);
-    lv_obj_set_style_bg_color(div, lv_color_hex(DIVIDER), 0);
+    lv_obj_set_style_bg_color(div, lv_color_hex(WIN31_DARK_SHADOW), 0);
     lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(div, 0, 0);
 }
@@ -229,14 +236,14 @@ static void create_bottom_bar()
     bottom_bar = lv_obj_create(scr);
     lv_obj_set_size(bottom_bar, LV_PCT(100), BOT_BAR_H);
     lv_obj_align(bottom_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_bg_color(bottom_bar, lv_color_hex(BG_SECONDARY), 0);
+    lv_obj_set_style_bg_color(bottom_bar, lv_color_hex(WIN31_FACE), 0);
     lv_obj_set_style_bg_opa(bottom_bar, LV_OPA_COVER, 0);
     lv_obj_set_style_pad_all(bottom_bar, 0, 0);
     lv_obj_set_style_border_width(bottom_bar, 0, 0);
 
     lv_obj_t* dev = lv_label_create(bottom_bar);
     lv_label_set_text(dev, slopos::mesh::getOwnName());
-    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_SECONDARY), 0);
+    lv_obj_set_style_text_color(dev, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_set_style_text_font(dev, &lv_font_montserrat_10, 0);
     lv_obj_align(dev, LV_ALIGN_LEFT_MID, 4, 0);
 
@@ -248,7 +255,7 @@ static void create_bottom_bar()
 
     batt_label = lv_label_create(bottom_bar);
     lv_label_set_text(batt_label, "--%");
-    lv_obj_set_style_text_color(batt_label, lv_color_hex(ACCENT), 0);
+    lv_obj_set_style_text_color(batt_label, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_set_style_text_font(batt_label, &lv_font_montserrat_10, 0);
     lv_obj_align(batt_label, LV_ALIGN_RIGHT_MID, -4, 0);
 
@@ -256,7 +263,7 @@ static void create_bottom_bar()
     lv_obj_t* div = lv_obj_create(scr);
     lv_obj_set_size(div, LV_PCT(100), DIVIDER_H);
     lv_obj_align(div, LV_ALIGN_TOP_MID, 0, DISPLAY_H - BOT_BAR_H - DIVIDER_H);
-    lv_obj_set_style_bg_color(div, lv_color_hex(DIVIDER), 0);
+    lv_obj_set_style_bg_color(div, lv_color_hex(WIN31_DARK_SHADOW), 0);
     lv_obj_set_style_bg_opa(div, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(div, 0, 0);
 }
@@ -267,15 +274,12 @@ static lv_obj_t* create_icon_tile(lv_obj_t* parent, const IconDef& icon, int idx
     lv_obj_t* tile = lv_obj_create(parent);
     lv_obj_set_size(tile, tile_w[idx], tile_h[idx]);
     lv_obj_set_pos(tile, tile_x[idx], tile_y[idx]);
-    lv_obj_set_style_bg_color(tile, lv_color_hex(BG_TERTIARY), 0);
-    lv_obj_set_style_bg_opa(tile, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(tile, 0, 0);
-    lv_obj_set_style_border_width(tile, PIXEL_BORDER, 0);
-    lv_obj_set_style_border_color(tile, lv_color_hex(BG_PRIMARY), 0);
+    apply_pixel_card(tile);
+    lv_obj_set_style_border_color(tile, lv_color_hex(WIN31_FACE), 0);
     lv_obj_set_style_pad_all(tile, 4, 0);
     disable_scroll(tile);
 
-    lv_obj_set_style_bg_color(tile, lv_color_hex(0x2a2a2a), LV_STATE_PRESSED);
+    lv_obj_set_style_bg_color(tile, lv_color_hex(WIN31_HIGHLIGHT), LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(tile, LV_OPA_COVER, LV_STATE_PRESSED);
 
     lv_obj_add_flag(tile, LV_OBJ_FLAG_CLICKABLE);
@@ -284,7 +288,7 @@ static lv_obj_t* create_icon_tile(lv_obj_t* parent, const IconDef& icon, int idx
     lv_obj_t* icon_label = lv_label_create(tile);
     lv_label_set_text(icon_label, icon.symbol);
     lv_obj_set_style_text_font(icon_label, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(icon_label, lv_color_hex(ACCENT), 0);
+    lv_obj_set_style_text_color(icon_label, lv_color_hex(WIN31_TITLE), 0);
     lv_obj_align(icon_label, LV_ALIGN_CENTER, 0, -8);
 
     lv_obj_t* label = lv_label_create(tile);
@@ -316,7 +320,6 @@ static void create_icon_grid()
     const int usable_w = CONTENT_W - (GRID_PAD * 2) - (GRID_PAD * (active_cols - 1));
     const int usable_h = CONTENT_H - (GRID_PAD * 2) - (GRID_PAD * (active_rows - 1));
     const int base_w = usable_w / active_cols;
-    const int extra_w = usable_w - (base_w * active_cols);
     const int base_h = usable_h / active_rows;
     const int extra_h = usable_h - (base_h * active_rows);
 

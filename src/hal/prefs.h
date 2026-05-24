@@ -14,7 +14,7 @@ namespace slopos {
 
 struct NodePrefs {
     char    node_name[32];
-    float   freq;           // MHz (e.g. 869.618)
+    float   freq;           // MHz (e.g. 915.000)
     float   bw;             // kHz (e.g. 62.5)
     uint8_t sf;             // LoRa spreading factor (6-12)
     uint8_t cr;             // coding rate denominator (5=4/5, 6=4/6, etc.)
@@ -24,7 +24,7 @@ struct NodePrefs {
 
     // Sentinel defaults — radio will NOT transmit until user configures
     void set_defaults() {
-        strncpy(node_name, "SlopOS T-Deck", sizeof(node_name) - 1);
+        strncpy(node_name, "MCWIN31", sizeof(node_name) - 1);
         node_name[sizeof(node_name) - 1] = '\0';
         freq = 0.0f;         // 0 = not configured
         bw   = 0.0f;
