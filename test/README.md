@@ -3,7 +3,7 @@
 ## Running Tests
 
 ```bash
-# Run all 161 tests on native platform (no hardware needed)
+# Run all 171 tests on native platform (no hardware needed)
 pio test -e native_test -v
 
 # Run specific test file
@@ -43,16 +43,17 @@ test/
 | Module | Tests | Coverage |
 |--------|-------|----------|
 | Touch (GT911) | 22 | Coordinate mapping, multitouch, press→release, edge cases |
-| Keyboard | 19 | Matrix scan, keymap, debounce, ghost detection, LVGL mapping |
+| Keyboard | 20 | Matrix scan, keymap, debounce, ghost detection, LVGL mapping |
 | Battery HAL | 16 | mV→%, clamping, monotonicity, ADC math, edge cases |
 | SD Card | 15 | SPI init, mount, read/write, directory listing, edge cases |
 | Mesh messaging | 15 | Message queue, send/receive, channel ops, contact export |
 | Map renderer | 14 | Tile math (lat/lon→tile), zoom levels, bounding box |
-| Mesh wrapper | 13 | API signatures, return ranges, unread count init |
+| Mesh wrapper | 15 | API signatures, return ranges, message metadata, unread count init |
 | Navigation | 12 | Forward/back, history stack, deep nav, all pairs |
 | GPS | 12 | NMEA parsing, coordinate conversion, fix detection |
 | Pin definitions | 9 | GPIO range, SPI/I2C conflicts, duplicates, LoRa params |
-| Theme constants | 7 | Darkness, vibrancy, distinctness, readability |
+| Trackball | 9 | Direction/click events, deadtime, idle calibration |
+| Theme constants | 5 | Win31 palette roles, distinctness, readability |
 | Build integration | 7 | Header inclusion, API existence, cross-module consistency |
 
 ## Adding New Tests

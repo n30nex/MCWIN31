@@ -90,6 +90,8 @@ struct ChannelMessage {
     char     sender[32];
     char     text[160];
     uint32_t timestamp;
+    int      rssi;
+    float    snr;
     bool     is_self;
 };
 static ChannelMessage ch_msgs[MAX_CHANNELS][MAX_MSGS];
@@ -291,8 +293,24 @@ static void update_channel_meta(int idx, const char* text, uint32_t timestamp)
     ch_meta[idx].timestamp = timestamp;
 }
 
+static bool has_rx_metadata(int rssi, float snr)
+{
+    return rssi < 0 || snr != 0.0f;
+}
+
+static void format_rx_metadata(char* buf, size_t sz, int rssi, float snr)
+{
+    if (!buf || sz == 0) return;
+    if (!has_rx_metadata(rssi, snr)) {
+        snprintf(buf, sz, "RX --");
+        return;
+    }
+    snprintf(buf, sz, "RX %ddBm  SNR %.1f", rssi, snr);
+}
+
 static void append_channel_message(int idx, const char* sender, const char* text,
-                                   uint32_t timestamp, bool is_self)
+                                   uint32_t timestamp, bool is_self,
+                                   int rssi = 0, float snr = 0.0f)
 {
     if (idx < 0 || idx >= MAX_CHANNELS) return;
 
@@ -310,6 +328,8 @@ static void append_channel_message(int idx, const char* sender, const char* text
     strncpy(msg.text, text ? text : "", sizeof(msg.text) - 1);
     msg.text[sizeof(msg.text) - 1] = '\0';
     msg.timestamp = timestamp;
+    msg.rssi = rssi;
+    msg.snr = snr;
     msg.is_self = is_self;
 
     update_channel_meta(idx, msg.text, timestamp);
@@ -474,7 +494,7 @@ static void create_top_bar()
 // ════════════════════════════════════════════════════
 static lv_obj_t* create_bubble(lv_obj_t* parent, const char* sender,
                                 const char* text, uint32_t timestamp,
-                                bool is_self)
+                                bool is_self, int rssi = 0, float snr = 0.0f)
 {
     lv_obj_t* container = lv_obj_create(parent);
     lv_obj_set_width(container, LV_PCT(100));
@@ -541,6 +561,15 @@ static lv_obj_t* create_bubble(lv_obj_t* parent, const char* sender,
     lv_label_set_long_mode(msg_text, LV_LABEL_LONG_WRAP);
     lv_obj_set_width(msg_text, LV_PCT(100));
 
+    if (!is_self) {
+        char meta_buf[32];
+        format_rx_metadata(meta_buf, sizeof(meta_buf), rssi, snr);
+        lv_obj_t* meta = lv_label_create(bubble);
+        lv_label_set_text(meta, meta_buf);
+        lv_obj_set_style_text_color(meta, lv_color_hex(TEXT_MUTED), 0);
+        lv_obj_set_style_text_font(meta, &lv_font_montserrat_10, 0);
+    }
+
     return container;
 }
 
@@ -568,7 +597,8 @@ static void render_active_messages()
     lv_obj_clean(msg_list);
     for (uint8_t i = 0; i < ch_msg_count[active_channel]; i++) {
         ChannelMessage& msg = ch_msgs[active_channel][i];
-        create_bubble(msg_list, msg.sender, msg.text, msg.timestamp, msg.is_self);
+        create_bubble(msg_list, msg.sender, msg.text, msg.timestamp, msg.is_self,
+                      msg.rssi, msg.snr);
     }
 
     uint32_t count = lv_obj_get_child_cnt(msg_list);
@@ -797,19 +827,20 @@ int chat_screen_unread_count()
     return total;
 }
 
-void chat_screen_add_msg(const char* channel, const char* sender, const char* text, bool is_self)
+void chat_screen_add_msg(const char* channel, const char* sender, const char* text,
+                         bool is_self, int rssi, float snr)
 {
     uint32_t now = slopos::mesh::getCurrentTime();
     int idx = find_channel_idx(channel);
     if (idx < 0 || idx >= MAX_CHANNELS) return;
 
-    append_channel_message(idx, sender, text, now, is_self);
+    append_channel_message(idx, sender, text, now, is_self, rssi, snr);
 
     bool visible = msg_list && idx == active_channel;
     if (!is_self && !visible) ch_meta[idx].unread++;
     if (!visible) return;
 
-    create_bubble(msg_list, sender, text, now, is_self);
+    create_bubble(msg_list, sender, text, now, is_self, rssi, snr);
     if (lv_obj_get_child_cnt(msg_list) > MAX_MSGS)
         lv_obj_del(lv_obj_get_child(msg_list, 0));
 

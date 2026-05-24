@@ -17,7 +17,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Settings and radio setup | Partial | US/CA profile and save-to-enable-TX flow started; date/time and keyboard backlight dialogs use shared Win31 chrome. |
 | Terminal and trace | Partial | Existing behavior retained. |
 | Signal/noise diagnostics | Partial | Existing behavior retained. |
-| Native unit tests | Done | `pio test -e native_test -v` passes with 169 succeeded and 1 expected native ESP32 skip. |
+| Native unit tests | Done | `pio test -e native_test -v` passes with 170 succeeded and 1 expected native ESP32 skip. |
 
 ## MC Term Reference
 
@@ -26,7 +26,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Contacts / Channels / Map / Mgmt navigation model | Todo | Home groups started; deeper tab parity pending. |
 | Status bar device, transport, battery/duty cycle | Partial | Shared status bars show device, RX/TX frequency, signal, `DC--`/`DC0%`, and battery. Airtime accounting pending. |
 | Unread channel and DM indicators | Partial | Channel list badges existed; Program Manager Messages badge now shows live unread total. DM-specific unread pending. |
-| DM/channel message metadata | Todo | Path, hops, RSSI, SNR, repeater hints pending. |
+| DM/channel message metadata | Partial | Received messages now carry and render RSSI/SNR; path, hops, delivery state, and repeater hints pending. |
 | Quick replies with variables | Todo | Not implemented yet. |
 | Telemetry request/history | Todo | Not implemented yet. |
 | Raw RX log and parsed packet detail | Todo | Not implemented yet. |

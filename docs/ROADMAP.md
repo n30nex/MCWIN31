@@ -22,6 +22,7 @@
 ## Phase 3 - Messaging And Mesh Parity
 
 - Preserve SlopOS chat, channel, contact, trace, terminal, map, diagnostics, and advertise screens.
+- Add received-message RSSI/SNR metadata to the mesh queue and chat bubbles.
 - Fill MC Term gaps for quick replies, message metadata, unread indicators, route hints, telemetry, raw packet logs, ping helpers, repeater/room admin, and settings depth.
 
 ## Phase 4 - Radio, Map, GPS, Diagnostics

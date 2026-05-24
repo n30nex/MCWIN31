@@ -25,7 +25,8 @@ namespace slopos::ui {
 void chat_screen_show();
 
 // Add a message to the chat display
-void chat_screen_add_msg(const char* channel, const char* sender, const char* text, bool is_self);
+void chat_screen_add_msg(const char* channel, const char* sender, const char* text,
+                         bool is_self, int rssi = 0, float snr = 0.0f);
 
 // Total unread messages across channel and direct-message views
 int chat_screen_unread_count();

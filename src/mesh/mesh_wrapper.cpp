@@ -69,6 +69,8 @@ static void queue_push(const char* sender, const char* channel, const char* text
     strncpy(m.text, text, sizeof(m.text) - 1);
     m.text[sizeof(m.text) - 1] = '\0';
     m.timestamp = rtc_clock.getCurrentTime();
+    m.rssi = (int)radio_driver.getLastRSSI();
+    m.snr = radio_driver.getLastSNR();
     m.is_self = false;
     msg_head = (msg_head + 1) % MAX_QUEUED;
     msg_count++;

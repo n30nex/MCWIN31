@@ -77,6 +77,8 @@ void mock_push_message(const char* sender, const char* text) {
     m.channel[0] = '\0';
     strncpy(m.text, text, sizeof(m.text) - 1);
     m.timestamp = 0;
+    m.rssi = mock_rssi;
+    m.snr = mock_snr;
     m.is_self = false;
 }
 

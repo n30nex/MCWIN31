@@ -97,6 +97,14 @@ TEST_F(MeshWrapperTest, GetUnreadCountReturnsInt) {
     SUCCEED();
 }
 
+TEST_F(MeshWrapperTest, MeshMessageCarriesRadioMetadata) {
+    slopos::mesh::MeshMessage msg{};
+    msg.rssi = -81;
+    msg.snr = 6.5f;
+    EXPECT_EQ(msg.rssi, -81);
+    EXPECT_FLOAT_EQ(msg.snr, 6.5f);
+}
+
 // ── Initial unread count is zero ────────────────────────
 TEST_F(MeshWrapperTest, UnreadCountStartsAtZero) {
     EXPECT_EQ(slopos::mesh::pendingMessageCount(), 0);
