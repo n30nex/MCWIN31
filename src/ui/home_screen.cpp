@@ -18,6 +18,7 @@
 
 
 #include "home_screen.h"
+#include "chat_screen.h"
 #include "navigation.h"
 #include "theme.h"
 #include "chrome.h"
@@ -44,7 +45,11 @@ static lv_obj_t* grid          = nullptr;
 static lv_obj_t* time_label    = nullptr;
 static lv_obj_t* batt_label    = nullptr;
 static lv_obj_t* signal_label  = nullptr;
+static lv_obj_t* transport_label = nullptr;
+static lv_obj_t* duty_label    = nullptr;
 static lv_obj_t* hashtag_label = nullptr;
+static lv_obj_t* message_badge = nullptr;
+static lv_obj_t* message_badge_label = nullptr;
 
 using namespace responsive;
 static constexpr int GRID_PAD   = 3;
@@ -187,8 +192,17 @@ static void create_bottom_bar()
     chrome::StatusBarParts parts =
         chrome::create_status_bar(scr, DISPLAY_H, BOT_BAR_H, DIVIDER_H);
     bottom_bar = parts.bar;
+    transport_label = parts.transport;
     signal_label = parts.signal;
+    duty_label = parts.duty;
     batt_label = parts.battery;
+}
+
+static void format_unread_count(char* buf, size_t sz, int unread)
+{
+    if (!buf || sz == 0) return;
+    if (unread > 99) std::snprintf(buf, sz, "99+");
+    else std::snprintf(buf, sz, "%d", unread);
 }
 
 // ── Icon tile ────────────────────────────────────────────
@@ -222,12 +236,19 @@ static lv_obj_t* create_icon_tile(lv_obj_t* parent, const IconDef& icon, int idx
 
     if (icon.badge) {
         lv_obj_t* badge = lv_obj_create(tile);
-        lv_obj_set_size(badge, 10, 10);
-        lv_obj_set_style_bg_color(badge, lv_color_hex(ACCENT_RED), 0);
-        lv_obj_set_style_bg_opa(badge, LV_OPA_COVER, 0);
-        lv_obj_set_style_radius(badge, 0, 0);
-        lv_obj_set_style_border_width(badge, 0, 0);
+        lv_obj_set_size(badge, 22, 15);
+        apply_pixel_badge(badge);
         lv_obj_align(badge, LV_ALIGN_TOP_RIGHT, -4, 4);
+        lv_obj_remove_flag(badge, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t* badge_text = lv_label_create(badge);
+        lv_label_set_text(badge_text, "0");
+        lv_obj_set_style_text_color(badge_text, lv_color_hex(TEXT_PRIMARY), 0);
+        lv_obj_set_style_text_font(badge_text, &lv_font_montserrat_10, 0);
+        lv_obj_center(badge_text);
+
+        message_badge = badge;
+        message_badge_label = badge_text;
     }
 
     return tile;
@@ -283,6 +304,10 @@ static void build_home_screen(lv_scr_load_anim_t anim, uint32_t duration)
     time_label    = nullptr;
     batt_label    = nullptr;
     signal_label  = nullptr;
+    transport_label = nullptr;
+    duty_label = nullptr;
+    message_badge = nullptr;
+    message_badge_label = nullptr;
     for (int i = 0; i < ICON_COUNT; i++) icon_tiles[i] = nullptr;
 
     scr = lv_obj_create(nullptr);
@@ -294,13 +319,15 @@ static void build_home_screen(lv_scr_load_anim_t anim, uint32_t duration)
     // in ui::loop() don't dereference freed objects.
     lv_obj_add_event_cb(scr, [](lv_event_t*) {
         scr = top_bar = bottom_bar = grid = nullptr;
-        time_label = batt_label = signal_label = hashtag_label = nullptr;
+        time_label = batt_label = signal_label = transport_label = duty_label = hashtag_label = nullptr;
+        message_badge = message_badge_label = nullptr;
         for (int i = 0; i < ICON_COUNT; i++) icon_tiles[i] = nullptr;
     }, LV_EVENT_DELETE, nullptr);
 
     create_top_bar();
     create_bottom_bar();
     create_icon_grid();
+    home_screen_update_unread();
     lv_scr_load_anim(scr, anim, duration, 0, true);
 }
 
@@ -388,12 +415,33 @@ void home_screen_update_signal(int rssi)
     lv_label_set_text(signal_label, chrome::signal_meter(rssi));
 }
 
+void home_screen_update_radio_status()
+{
+    chrome::update_transport_label(transport_label);
+    chrome::update_duty_label(duty_label);
+}
+
 void home_screen_update_channels()
 {
     if (!hashtag_label) return;
     char buf[120];
     chrome::build_channel_string(buf, sizeof(buf));
     lv_label_set_text(hashtag_label, buf);
+}
+
+void home_screen_update_unread()
+{
+    if (!message_badge || !message_badge_label) return;
+    int unread = chat_screen_unread_count();
+    if (unread <= 0) {
+        lv_obj_add_flag(message_badge, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    char buf[8];
+    format_unread_count(buf, sizeof(buf), unread);
+    lv_label_set_text(message_badge_label, buf);
+    lv_obj_remove_flag(message_badge, LV_OBJ_FLAG_HIDDEN);
 }
 
 } // namespace slopos::ui

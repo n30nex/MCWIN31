@@ -251,10 +251,13 @@ static void populate_channel_rows(lv_obj_t* list) {
             lv_obj_set_style_border_width(badge, 0, 0);
             lv_obj_clear_flag(badge, LV_OBJ_FLAG_CLICKABLE);
 
-            char cnt_buf[4];
+            char cnt_buf[5];
             int cnt = ch_meta[i].unread;
             if (cnt > 9) snprintf(cnt_buf, sizeof(cnt_buf), "9+");
-            else         snprintf(cnt_buf, sizeof(cnt_buf), "%d", cnt);
+            else {
+                cnt_buf[0] = (char)('0' + (cnt < 0 ? 0 : cnt));
+                cnt_buf[1] = '\0';
+            }
             lv_obj_t* cnt_lbl = lv_label_create(badge);
             lv_label_set_text(cnt_lbl, cnt_buf);
             lv_obj_set_style_text_color(cnt_lbl, lv_color_hex(0xffffff), 0);
@@ -783,6 +786,15 @@ static void show_add_channel_options(lv_obj_t* parent) {
 void chat_screen_show()
 {
     show_channel_list(LV_SCR_LOAD_ANIM_MOVE_LEFT);
+}
+
+int chat_screen_unread_count()
+{
+    int total = 0;
+    for (int i = 0; i < MAX_CHANNELS; i++) {
+        if (ch_meta[i].unread > 0) total += ch_meta[i].unread;
+    }
+    return total;
 }
 
 void chat_screen_add_msg(const char* channel, const char* sender, const char* text, bool is_self)

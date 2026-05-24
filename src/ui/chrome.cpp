@@ -3,7 +3,9 @@
 #include "chrome.h"
 #include "theme.h"
 #include "../hal/battery.h"
+#include "../hal/prefs.h"
 #include "../mesh/mesh_wrapper.h"
+#include "../mesh/radio_profile.h"
 #include <cstdio>
 #include <cstring>
 
@@ -72,6 +74,22 @@ void format_time(char* buf, size_t sz, uint32_t epoch)
 void format_current_time(char* buf, size_t sz)
 {
     format_time(buf, sz, slopos::mesh::getCurrentTime());
+}
+
+void format_transport_label(char* buf, size_t sz)
+{
+    if (!buf || sz == 0) return;
+    const slopos::NodePrefs& p = slopos::prefs_get();
+    const auto& profile = slopos::radio::default_profile();
+    const float freq = p.configured ? p.freq : profile.freq_mhz;
+    std::snprintf(buf, sz, "%s %.0f", p.configured ? "TX" : "RX", freq);
+}
+
+void format_duty_label(char* buf, size_t sz)
+{
+    if (!buf || sz == 0) return;
+    const slopos::NodePrefs& p = slopos::prefs_get();
+    std::snprintf(buf, sz, "%s", p.configured ? "DC0%" : "DC--");
 }
 
 const char* signal_meter(int rssi)
@@ -182,15 +200,28 @@ StatusBarParts create_status_bar(lv_obj_t* parent, int display_h, int bar_h, int
 
     parts.device = lv_label_create(parts.bar);
     lv_label_set_text(parts.device, slopos::mesh::getOwnName());
+    lv_label_set_long_mode(parts.device, LV_LABEL_LONG_DOT);
+    lv_obj_set_width(parts.device, 76);
     lv_obj_set_style_text_color(parts.device, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_set_style_text_font(parts.device, &lv_font_montserrat_10, 0);
     lv_obj_align(parts.device, LV_ALIGN_LEFT_MID, 4, 0);
+
+    parts.transport = lv_label_create(parts.bar);
+    update_transport_label(parts.transport);
+    lv_obj_set_style_text_font(parts.transport, &lv_font_montserrat_10, 0);
+    lv_obj_set_width(parts.transport, 60);
+    lv_obj_align(parts.transport, LV_ALIGN_LEFT_MID, 84, 0);
 
     parts.signal = lv_label_create(parts.bar);
     lv_label_set_text(parts.signal, signal_meter(slopos::mesh::getLastRSSI()));
     lv_obj_set_style_text_color(parts.signal, lv_color_hex(TEXT_PRIMARY), 0);
     lv_obj_set_style_text_font(parts.signal, &lv_font_montserrat_10, 0);
-    lv_obj_align(parts.signal, LV_ALIGN_CENTER, -20, 0);
+    lv_obj_align(parts.signal, LV_ALIGN_CENTER, 12, 0);
+
+    parts.duty = lv_label_create(parts.bar);
+    update_duty_label(parts.duty);
+    lv_obj_set_style_text_font(parts.duty, &lv_font_montserrat_10, 0);
+    lv_obj_align(parts.duty, LV_ALIGN_RIGHT_MID, -40, 0);
 
     parts.battery = lv_label_create(parts.bar);
     update_battery_label(parts.battery, slopos_battery_pct());
@@ -198,6 +229,25 @@ StatusBarParts create_status_bar(lv_obj_t* parent, int display_h, int bar_h, int
     lv_obj_align(parts.battery, LV_ALIGN_RIGHT_MID, -4, 0);
 
     return parts;
+}
+
+void update_transport_label(lv_obj_t* label)
+{
+    if (!label) return;
+    char buf[12];
+    format_transport_label(buf, sizeof(buf));
+    lv_label_set_text(label, buf);
+    lv_obj_set_style_text_color(label, lv_color_hex(TEXT_PRIMARY), 0);
+}
+
+void update_duty_label(lv_obj_t* label)
+{
+    if (!label) return;
+    char buf[8];
+    format_duty_label(buf, sizeof(buf));
+    lv_label_set_text(label, buf);
+    lv_obj_set_style_text_color(label,
+        lv_color_hex(slopos::prefs_get().configured ? TEXT_PRIMARY : TEXT_MUTED), 0);
 }
 
 void update_battery_label(lv_obj_t* label, int pct)

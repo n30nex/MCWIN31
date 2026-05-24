@@ -99,6 +99,7 @@ typedef void (*lv_event_cb_t)(lv_event_t* e);
 #define LV_OBJ_FLAG_SCROLL_CHAIN     (LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER)
 #define LV_OBJ_FLAG_SCROLL_ON_FOCUS  (1 << 13)
 #define LV_OBJ_FLAG_SCROLL_WITH_ARROW (1 << 14)
+#define LV_OBJ_FLAG_HIDDEN           (1 << 15)
 
 // ── Object states ───────────────────────────────────────
 #define LV_STATE_DEFAULT 0

@@ -14,6 +14,8 @@
 - Use a Program Manager home screen with grouped app icons.
 - Reuse shared title bar, status bar, dialog window, and dialog button chrome.
 - Convert settings/date/time/channel modal dialogs to the shared Win31 chrome.
+- Show transport/TX gate and duty-cycle state in the shared status bar.
+- Drive the Program Manager Messages badge from actual unread chat counts.
 - Keep the current screen routing and hardware input behavior.
 - Restyle existing screens before changing behavior.
 

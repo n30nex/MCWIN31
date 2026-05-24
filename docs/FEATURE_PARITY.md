@@ -9,8 +9,8 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | PlatformIO ESP32-S3 build | Done | `MCWIN31_TDeck` env added; SlopOS aliases retained. |
 | MeshCore protocol integration | Partial | Preserved from SlopOS; TX now gated until Radio Setup is saved. |
 | T-Deck HAL | Partial | Display, touch, keyboard, trackball, battery, GPS, SD preserved. |
-| Home screen | Partial | Program Manager-style shell added. |
-| Chat screen | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome. |
+| Home screen | Partial | Program Manager-style shell added; Messages badge now reflects unread chat count. |
+| Chat screen | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome; unread total exposed to home. |
 | Contacts and heard lists | Partial | Existing behavior retained. |
 | Channels | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome. |
 | Map | Partial | Existing renderer retained. |
@@ -24,8 +24,8 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Contacts / Channels / Map / Mgmt navigation model | Todo | Home groups started; deeper tab parity pending. |
-| Status bar device, transport, battery/duty cycle | Todo | Current bars show device, signal, battery, time only. |
-| Unread channel and DM indicators | Todo | Home badge placeholder exists. |
+| Status bar device, transport, battery/duty cycle | Partial | Shared status bars show device, RX/TX frequency, signal, `DC--`/`DC0%`, and battery. Airtime accounting pending. |
+| Unread channel and DM indicators | Partial | Channel list badges existed; Program Manager Messages badge now shows live unread total. DM-specific unread pending. |
 | DM/channel message metadata | Todo | Path, hops, RSSI, SNR, repeater hints pending. |
 | Quick replies with variables | Todo | Not implemented yet. |
 | Telemetry request/history | Todo | Not implemented yet. |
