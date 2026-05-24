@@ -3,7 +3,7 @@
 ## Running Tests
 
 ```bash
-# Run all 171 tests on native platform (no hardware needed)
+# Run all 177 tests on native platform (no hardware needed)
 pio test -e native_test -v
 
 # Run specific test file
@@ -33,6 +33,7 @@ test/
 ├── test_mesh_wrapper/         # Mesh API contract, return value ranges
 ├── test_navigation/           # Screen routing state machine, back nav
 ├── test_pins/                 # Pin conflicts, GPIO ranges, bus consistency
+├── test_quick_reply/          # Quick-reply template expansion
 ├── test_sdcard/               # SPI init, mount, read/write, edge cases
 ├── test_theme/                # Color constants, distinctness, brightness
 └── test_touch/                # GT911 coordinate mapping, multitouch, lifecycle
@@ -53,6 +54,7 @@ test/
 | GPS | 12 | NMEA parsing, coordinate conversion, fix detection |
 | Pin definitions | 9 | GPIO range, SPI/I2C conflicts, duplicates, LoRa params |
 | Trackball | 9 | Direction/click events, deadtime, idle calibration |
+| Quick replies | 6 | Template variables, truncation, missing context values |
 | Theme constants | 5 | Win31 palette roles, distinctness, readability |
 | Build integration | 7 | Header inclusion, API existence, cross-module consistency |
 

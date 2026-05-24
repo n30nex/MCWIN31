@@ -21,6 +21,7 @@
 #include "navigation.h"
 #include "theme.h"
 #include "chrome.h"
+#include "quick_reply.h"
 #include "responsive.h"
 #include "../hal/tdeck_pins.h"
 #include "../hal/battery.h"
@@ -639,23 +640,31 @@ static void do_send()
 // ════════════════════════════════════════════════════
 struct QuickReply {
     const char* label;
-    const char* text;
+    const char* tpl;
 };
 
 static constexpr QuickReply QUICK_REPLIES[] = {
     {"OK",        "OK"},
-    {"On my way", "On my way"},
-    {"Need help", "Need help"},
-    {"At camp",  "At camp"},
+    {"On my way", "On my way to {channel}"},
+    {"Need help", "Need help on {channel}"},
+    {"At camp",  "{name} at camp {time}"},
     {"Yes",      "Yes"},
     {"No",       "No"},
 };
 
 static void quick_reply_cb(lv_event_t* e)
 {
-    const char* text = (const char*)lv_event_get_user_data(e);
-    if (input_field && text) {
-        lv_textarea_set_text(input_field, text);
+    const char* tpl = (const char*)lv_event_get_user_data(e);
+    if (input_field && tpl) {
+        char expanded[160];
+        const char* channel = (active_channel >= 0 && active_channel < dyn_count)
+            ? dyn_channels[active_channel] : "";
+        quick_reply_expand_template(tpl, {
+            slopos::mesh::getOwnName(),
+            channel,
+            slopos::mesh::getCurrentTime()
+        }, expanded, sizeof(expanded));
+        lv_textarea_set_text(input_field, expanded);
         lv_group_focus_obj(input_field);
     }
 
@@ -681,7 +690,7 @@ static void show_quick_replies(lv_obj_t* parent)
         lv_obj_t* btn = chrome::create_dialog_button(
             dlg, QUICK_REPLIES[i].label, btn_w, btn_h,
             WIN31_FACE, TEXT_PRIMARY, quick_reply_cb,
-            (void*)QUICK_REPLIES[i].text);
+            (void*)QUICK_REPLIES[i].tpl);
         lv_obj_align(btn, LV_ALIGN_TOP_LEFT,
                      margin + col * (btn_w + gap), 32 + row * 34);
     }
