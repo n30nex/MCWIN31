@@ -122,6 +122,38 @@ lv_obj_t* create_title_button(lv_obj_t* parent, const char* text, int w, int h,
     return btn;
 }
 
+lv_obj_t* create_dialog_window(lv_obj_t* parent, int w, int h, const char* title)
+{
+    lv_obj_t* dialog = lv_obj_create(parent);
+    lv_obj_set_size(dialog, w, h);
+    lv_obj_center(dialog);
+    apply_win31_face(dialog);
+    lv_obj_set_style_pad_all(dialog, 0, 0);
+    disable_scroll(dialog);
+    create_title_bar(dialog, 20, title);
+    return dialog;
+}
+
+lv_obj_t* create_dialog_button(lv_obj_t* parent, const char* text, int w, int h,
+                               uint32_t bg_color, uint32_t text_color,
+                               lv_event_cb_t cb, void* user_data)
+{
+    lv_obj_t* btn = lv_btn_create(parent);
+    lv_obj_set_size(btn, w, h);
+    apply_pixel_btn(btn);
+    lv_obj_set_style_bg_color(btn, lv_color_hex(bg_color), 0);
+    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
+    if (cb) lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, user_data);
+
+    lv_obj_t* label = lv_label_create(btn);
+    lv_label_set_text(label, text ? text : "");
+    lv_obj_set_style_text_color(label, lv_color_hex(text_color), 0);
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_10, 0);
+    lv_obj_center(label);
+    disable_scroll(label);
+    return btn;
+}
+
 lv_obj_t* create_divider(lv_obj_t* parent, int y, int height)
 {
     lv_obj_t* div = lv_obj_create(parent);

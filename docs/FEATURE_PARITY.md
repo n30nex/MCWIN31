@@ -10,14 +10,14 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | MeshCore protocol integration | Partial | Preserved from SlopOS; TX now gated until Radio Setup is saved. |
 | T-Deck HAL | Partial | Display, touch, keyboard, trackball, battery, GPS, SD preserved. |
 | Home screen | Partial | Program Manager-style shell added. |
-| Chat screen | Partial | Existing behavior retained; theme pass still broad. |
+| Chat screen | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome. |
 | Contacts and heard lists | Partial | Existing behavior retained. |
-| Channels | Partial | Existing behavior retained. |
+| Channels | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome. |
 | Map | Partial | Existing renderer retained. |
-| Settings and radio setup | Partial | US/CA profile and save-to-enable-TX flow started. |
+| Settings and radio setup | Partial | US/CA profile and save-to-enable-TX flow started; date/time and keyboard backlight dialogs use shared Win31 chrome. |
 | Terminal and trace | Partial | Existing behavior retained. |
 | Signal/noise diagnostics | Partial | Existing behavior retained. |
-| Native unit tests | Partial | Theme and build tests updated; full suite pending verification. |
+| Native unit tests | Done | `pio test -e native_test -v` passes with 169 succeeded and 1 expected native ESP32 skip. |
 
 ## MC Term Reference
 

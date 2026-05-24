@@ -10,7 +10,7 @@ The goal is a practical handheld mesh terminal: Program Manager-style home scree
 |------|--------|
 | Public fork under `n30nex/MCWIN31` | Done |
 | PlatformIO firmware build env | `MCWIN31_TDeck` |
-| Windows 3.1 theme primitives | Initial |
+| Windows 3.1 theme primitives | In progress |
 | Program Manager home screen | Initial |
 | US/CA 902-928 MHz profile | Initial |
 | TX gating until Radio Setup is saved | Initial |

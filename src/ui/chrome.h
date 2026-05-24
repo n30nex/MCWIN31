@@ -26,6 +26,10 @@ const char* signal_meter(int rssi);
 lv_obj_t* create_title_bar(lv_obj_t* parent, int height, const char* title);
 lv_obj_t* create_title_button(lv_obj_t* parent, const char* text, int w, int h,
                               lv_event_cb_t cb, bool enabled = true);
+lv_obj_t* create_dialog_window(lv_obj_t* parent, int w, int h, const char* title);
+lv_obj_t* create_dialog_button(lv_obj_t* parent, const char* text, int w, int h,
+                               uint32_t bg_color, uint32_t text_color,
+                               lv_event_cb_t cb, void* user_data = nullptr);
 lv_obj_t* create_divider(lv_obj_t* parent, int y, int height = 1);
 StatusBarParts create_status_bar(lv_obj_t* parent, int display_h, int bar_h, int divider_h);
 void update_battery_label(lv_obj_t* label, int pct);

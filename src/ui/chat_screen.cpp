@@ -707,19 +707,8 @@ static void refresh_chat_list_view(lv_obj_t* scr) {
 
 static void show_add_channel_options(lv_obj_t* parent) {
     auto dlg_sz = dialog_size(260, 140);
-    lv_obj_t* dlg = lv_obj_create(parent);
-    lv_obj_set_size(dlg, dlg_sz.w, dlg_sz.h);
-    lv_obj_center(dlg);
-    lv_obj_set_style_bg_color(dlg, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_radius(dlg, 0, 0);
-    lv_obj_set_style_border_width(dlg, 0, 0);
-    lv_obj_set_style_pad_all(dlg, 8, 0);
-
-    lv_obj_t* title = lv_label_create(dlg);
-    lv_label_set_text(title, "Add # Channel");
-    lv_obj_set_style_text_color(title, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 4);
+    lv_obj_t* dlg = chrome::create_dialog_window(parent, dlg_sz.w, dlg_sz.h,
+                                                 "Add # Channel");
 
     lv_obj_t* nl = lv_label_create(dlg);
     lv_label_set_text(nl, "Hashtag:");
@@ -729,10 +718,8 @@ static void show_add_channel_options(lv_obj_t* parent) {
     lv_obj_t* ni = lv_textarea_create(dlg);
     lv_obj_set_size(ni, dlg_sz.w - 16, 28);
     lv_obj_align(ni, LV_ALIGN_TOP_MID, 0, 46);
-    lv_obj_set_style_bg_color(ni, lv_color_hex(BG_INPUT), 0);
-    lv_obj_set_style_text_color(ni, lv_color_hex(TEXT_PRIMARY), 0);
+    apply_pixel_input(ni);
     lv_obj_set_style_text_font(ni, &lv_font_montserrat_10, 0);
-    lv_obj_set_style_border_width(ni, 0, 0);
     lv_textarea_set_one_line(ni, true);
     lv_textarea_set_placeholder_text(ni, "e.g. #general");
 
@@ -747,14 +734,9 @@ static void show_add_channel_options(lv_obj_t* parent) {
     lv_obj_set_style_text_font(fb, &lv_font_montserrat_10, 0);
     lv_obj_align(fb, LV_ALIGN_BOTTOM_MID, 0, -32);
 
-    lv_obj_t* add = lv_btn_create(dlg);
-    lv_obj_set_size(add, 100, 28);
+    lv_obj_t* add = chrome::create_dialog_button(
+        dlg, "Add", 100, 28, ACCENT_GREEN, WIN31_HIGHLIGHT, nullptr);
     lv_obj_align(add, LV_ALIGN_BOTTOM_MID, 0, -4);
-    lv_obj_set_style_bg_color(add, lv_color_hex(ACCENT_GREEN), 0);
-    lv_obj_set_style_radius(add, 0, 0);
-    lv_obj_t* al = lv_label_create(add);
-    lv_label_set_text(al, "Add");
-    lv_obj_center(al);
 
     auto submit = [](lv_event_t* e) {
         lv_obj_t* d = lv_obj_get_parent((lv_obj_t*)lv_event_get_current_target(e));

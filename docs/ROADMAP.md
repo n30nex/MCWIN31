@@ -12,6 +12,8 @@
 
 - Replace the dark Discord-like palette with Win3.1-inspired theme primitives.
 - Use a Program Manager home screen with grouped app icons.
+- Reuse shared title bar, status bar, dialog window, and dialog button chrome.
+- Convert settings/date/time/channel modal dialogs to the shared Win31 chrome.
 - Keep the current screen routing and hardware input behavior.
 - Restyle existing screens before changing behavior.
 

@@ -549,27 +549,15 @@ static void datetime_set_dialog(lv_obj_t* parent, bool is_date)
     else         snprintf(cur, sizeof(cur), "%02d:%02d", h, mi);
 
     auto dlg_sz = dialog_size(260, 120);
-    lv_obj_t* dlg = lv_obj_create(parent);
-    lv_obj_set_size(dlg, dlg_sz.w, dlg_sz.h);
-    lv_obj_center(dlg);
-    lv_obj_set_style_bg_color(dlg, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_radius(dlg, 0, 0);
-    lv_obj_set_style_border_width(dlg, 0, 0);
-    lv_obj_set_style_pad_all(dlg, 8, 0);
-
-    lv_obj_t* title = lv_label_create(dlg);
-    lv_label_set_text(title, is_date ? "Set Date (YYYY-MM-DD)" : "Set Time (HH:MM 24h)");
-    lv_obj_set_style_text_color(title, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 4);
+    lv_obj_t* dlg = chrome::create_dialog_window(
+        parent, dlg_sz.w, dlg_sz.h,
+        is_date ? "Set Date (YYYY-MM-DD)" : "Set Time (HH:MM 24h)");
 
     lv_obj_t* input = lv_textarea_create(dlg);
     lv_obj_set_size(input, dlg_sz.w - 16, 28);
     lv_obj_align(input, LV_ALIGN_TOP_MID, 0, 28);
-    lv_obj_set_style_bg_color(input, lv_color_hex(BG_INPUT), 0);
-    lv_obj_set_style_text_color(input, lv_color_hex(TEXT_PRIMARY), 0);
+    apply_pixel_input(input);
     lv_obj_set_style_text_font(input, &lv_font_montserrat_10, 0);
-    lv_obj_set_style_border_width(input, 0, 0);
     lv_textarea_set_one_line(input, true);
     lv_textarea_set_text(input, cur);
 
@@ -585,28 +573,16 @@ static void datetime_set_dialog(lv_obj_t* parent, bool is_date)
     lv_obj_set_style_text_font(fb, &lv_font_montserrat_10, 0);
     lv_obj_align(fb, LV_ALIGN_BOTTOM_MID, 0, -28);
 
-    lv_obj_t* cancel_btn = lv_btn_create(dlg);
-    lv_obj_set_size(cancel_btn, 72, 24);
+    lv_obj_t* cancel_btn = chrome::create_dialog_button(
+        dlg, "Cancel", 72, 24, ACCENT, TEXT_PRIMARY,
+        [](lv_event_t* e) {
+            lv_obj_del_async(lv_obj_get_parent((lv_obj_t*)lv_event_get_target(e)));
+        });
     lv_obj_align(cancel_btn, LV_ALIGN_BOTTOM_LEFT, 4, -4);
-    lv_obj_set_style_bg_color(cancel_btn, lv_color_hex(BG_TERTIARY), 0);
-    lv_obj_set_style_radius(cancel_btn, 0, 0);
-    lv_obj_t* cl = lv_label_create(cancel_btn);
-    lv_label_set_text(cl, "Cancel");
-    lv_obj_set_style_text_font(cl, &lv_font_montserrat_10, 0);
-    lv_obj_center(cl);
-    lv_obj_add_event_cb(cancel_btn, [](lv_event_t* e) {
-        lv_obj_del_async(lv_obj_get_parent((lv_obj_t*)lv_event_get_target(e)));
-    }, LV_EVENT_CLICKED, nullptr);
 
-    lv_obj_t* set_btn = lv_btn_create(dlg);
-    lv_obj_set_size(set_btn, 72, 24);
+    lv_obj_t* set_btn = chrome::create_dialog_button(
+        dlg, "Set", 72, 24, ACCENT_GREEN, WIN31_HIGHLIGHT, nullptr);
     lv_obj_align(set_btn, LV_ALIGN_BOTTOM_RIGHT, -4, -4);
-    lv_obj_set_style_bg_color(set_btn, lv_color_hex(ACCENT_GREEN), 0);
-    lv_obj_set_style_radius(set_btn, 0, 0);
-    lv_obj_t* sl = lv_label_create(set_btn);
-    lv_label_set_text(sl, "Set");
-    lv_obj_set_style_text_font(sl, &lv_font_montserrat_10, 0);
-    lv_obj_center(sl);
 
     // ctx lives until the dialog is deleted (see LV_EVENT_DELETE below)
     auto* ctx = new DateTimeDialogCtx{ input, fb, is_date };
@@ -671,19 +647,8 @@ struct BacklightCtx {
 static void backlight_dialog(lv_obj_t* parent, lv_obj_t* row_label)
 {
     auto dlg_sz = dialog_size(220, 120);
-    lv_obj_t* dlg = lv_obj_create(parent);
-    lv_obj_set_size(dlg, dlg_sz.w, dlg_sz.h);
-    lv_obj_center(dlg);
-    lv_obj_set_style_bg_color(dlg, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_radius(dlg, 0, 0);
-    lv_obj_set_style_border_width(dlg, 0, 0);
-    lv_obj_set_style_pad_all(dlg, 8, 0);
-
-    lv_obj_t* title = lv_label_create(dlg);
-    lv_label_set_text(title, "Keyboard Backlight");
-    lv_obj_set_style_text_color(title, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 4);
+    lv_obj_t* dlg = chrome::create_dialog_window(parent, dlg_sz.w, dlg_sz.h,
+                                                 "Keyboard Backlight");
 
     const slopos::NodePrefs& p = slopos::prefs_get();
     int brightness = p.kbd_backlight;
@@ -696,32 +661,17 @@ static void backlight_dialog(lv_obj_t* parent, lv_obj_t* row_label)
     lv_obj_set_style_text_font(val_lbl, &lv_font_montserrat_12, 0);
     lv_obj_align(val_lbl, LV_ALIGN_CENTER, 0, -2);
 
-    auto* minus_btn = lv_btn_create(dlg);
-    lv_obj_set_size(minus_btn, 40, 28);
+    auto* minus_btn = chrome::create_dialog_button(
+        dlg, "-", 40, 28, ACCENT_RED, WIN31_HIGHLIGHT, nullptr);
     lv_obj_align(minus_btn, LV_ALIGN_LEFT_MID, 20, 0);
-    lv_obj_set_style_bg_color(minus_btn, lv_color_hex(ACCENT_RED), 0);
-    lv_obj_set_style_radius(minus_btn, 0, 0);
-    lv_obj_t* ml = lv_label_create(minus_btn);
-    lv_label_set_text(ml, "-");
-    lv_obj_center(ml);
 
-    auto* plus_btn = lv_btn_create(dlg);
-    lv_obj_set_size(plus_btn, 40, 28);
+    auto* plus_btn = chrome::create_dialog_button(
+        dlg, "+", 40, 28, ACCENT, TEXT_PRIMARY, nullptr);
     lv_obj_align(plus_btn, LV_ALIGN_RIGHT_MID, -20, 0);
-    lv_obj_set_style_bg_color(plus_btn, lv_color_hex(ACCENT), 0);
-    lv_obj_set_style_radius(plus_btn, 0, 0);
-    lv_obj_t* pl = lv_label_create(plus_btn);
-    lv_label_set_text(pl, "+");
-    lv_obj_center(pl);
 
-    auto* set_btn = lv_btn_create(dlg);
-    lv_obj_set_size(set_btn, 72, 24);
+    auto* set_btn = chrome::create_dialog_button(
+        dlg, "Set", 72, 24, ACCENT_GREEN, WIN31_HIGHLIGHT, nullptr);
     lv_obj_align(set_btn, LV_ALIGN_BOTTOM_MID, 0, -4);
-    lv_obj_set_style_bg_color(set_btn, lv_color_hex(ACCENT_GREEN), 0);
-    lv_obj_set_style_radius(set_btn, 0, 0);
-    lv_obj_t* sl = lv_label_create(set_btn);
-    lv_label_set_text(sl, "Set");
-    lv_obj_center(sl);
 
     auto* ctx = new BacklightCtx{ val_lbl, row_label, brightness };
 
@@ -1102,19 +1052,8 @@ static void refresh_channel_list(lv_obj_t* list);
 static lv_obj_t* channel_create_dialog(lv_obj_t* parent)
 {
     auto dlg_sz = dialog_size(260, 140);
-    lv_obj_t* dialog = lv_obj_create(parent);
-    lv_obj_set_size(dialog, dlg_sz.w, dlg_sz.h);
-    lv_obj_center(dialog);
-    lv_obj_set_style_bg_color(dialog, lv_color_hex(BG_SECONDARY), 0);
-    lv_obj_set_style_radius(dialog, 0, 0);
-    lv_obj_set_style_border_width(dialog, 0, 0);
-    lv_obj_set_style_pad_all(dialog, 8, 0);
-
-    lv_obj_t* title = lv_label_create(dialog);
-    lv_label_set_text(title, "Add # Channel");
-    lv_obj_set_style_text_color(title, lv_color_hex(TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 4);
+    lv_obj_t* dialog = chrome::create_dialog_window(parent, dlg_sz.w, dlg_sz.h,
+                                                    "Add # Channel");
 
     lv_obj_t* name_label = lv_label_create(dialog);
     lv_label_set_text(name_label, "Hashtag:");
@@ -1124,10 +1063,8 @@ static lv_obj_t* channel_create_dialog(lv_obj_t* parent)
     lv_obj_t* name_input = lv_textarea_create(dialog);
     lv_obj_set_size(name_input, dlg_sz.w - 16, 28);
     lv_obj_align(name_input, LV_ALIGN_TOP_MID, 0, 46);
-    lv_obj_set_style_bg_color(name_input, lv_color_hex(BG_INPUT), 0);
-    lv_obj_set_style_text_color(name_input, lv_color_hex(TEXT_PRIMARY), 0);
+    apply_pixel_input(name_input);
     lv_obj_set_style_text_font(name_input, &lv_font_montserrat_10, 0);
-    lv_obj_set_style_border_width(name_input, 0, 0);
     lv_textarea_set_one_line(name_input, true);
     lv_textarea_set_placeholder_text(name_input, "e.g. #general");
 
@@ -1142,14 +1079,9 @@ static lv_obj_t* channel_create_dialog(lv_obj_t* parent)
     lv_obj_set_style_text_font(feedback, &lv_font_montserrat_10, 0);
     lv_obj_align(feedback, LV_ALIGN_BOTTOM_MID, 0, -32);
 
-    lv_obj_t* create_btn = lv_btn_create(dialog);
-    lv_obj_set_size(create_btn, 100, 28);
+    lv_obj_t* create_btn = chrome::create_dialog_button(
+        dialog, "Add", 100, 28, ACCENT_GREEN, WIN31_HIGHLIGHT, nullptr);
     lv_obj_align(create_btn, LV_ALIGN_BOTTOM_MID, 0, -4);
-    lv_obj_set_style_bg_color(create_btn, lv_color_hex(ACCENT_GREEN), 0);
-    lv_obj_set_style_radius(create_btn, 0, 0);
-    lv_obj_t* cbl = lv_label_create(create_btn);
-    lv_label_set_text(cbl, "Add");
-    lv_obj_center(cbl);
 
     lv_obj_add_event_cb(create_btn, [](lv_event_t* e) {
         lv_obj_t* dlg = lv_obj_get_parent((lv_obj_t*)lv_event_get_current_target(e));
