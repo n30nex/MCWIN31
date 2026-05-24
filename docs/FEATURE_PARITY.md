@@ -17,7 +17,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Settings and radio setup | Partial | US/CA profile and save-to-enable-TX flow started; date/time and keyboard backlight dialogs use shared Win31 chrome. |
 | Terminal and trace | Partial | Existing behavior retained. |
 | Signal/noise diagnostics | Partial | Existing behavior retained. |
-| Native unit tests | Done | `pio test -e native_test -v` passes with 176 succeeded and 1 expected native ESP32 skip. |
+| Native unit tests | Done | `pio test -e native_test -v` passes with 184 succeeded and 1 expected native ESP32 skip. |
 
 ## MC Term Reference
 
@@ -30,7 +30,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Quick replies with variables | Partial | Canned quick replies expand `{name}`, `{channel}`, and `{time}` into the chat compose field; per-channel preset editing pending. |
 | Telemetry request/history | Todo | Not implemented yet. |
 | Raw RX log and parsed packet detail | Todo | Not implemented yet. |
-| Ping and neighbor scan helpers | Todo | Trace path exists; ping/scan parity pending. |
+| Ping and neighbor scan helpers | Partial | Terminal now supports `neighbors` summaries and `ping <name|#>` using the existing MeshCore trace path; active scan flow pending. |
 | Wi-Fi and BLE settings | Todo | Not implemented yet. |
 | GPS distance tracking with advert flooding | Todo | GPS parser preserved; tracking flow pending. |
 | Map tile cache behavior | Partial | SlopOS offline renderer retained; MC Term parity pending. |

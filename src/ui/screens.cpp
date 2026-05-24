@@ -23,6 +23,7 @@
 #include "chrome.h"
 #include "responsive.h"
 #include "home_screen.h"
+#include "terminal_commands.h"
 #include "../hal/tdeck_pins.h"
 #include "../hal/battery.h"
 #include "../hal/sdcard.h"
@@ -35,6 +36,7 @@
 #include <Arduino.h>
 #include <lvgl.h>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 namespace slopos::ui {
@@ -848,6 +850,88 @@ static void term_add_line(lv_obj_t* log, const char* text)
 // ════════════════════════════════════════════════════════
 // Terminal — colored log output + command input
 // ════════════════════════════════════════════════════════
+static bool terminal_contact_index_from_arg(const char* arg, int total, int* out_idx)
+{
+    if (!arg || !arg[0] || !out_idx) return false;
+    char* end = nullptr;
+    long v = strtol(arg, &end, 10);
+    if (end && *end == '\0' && v >= 1 && v <= total) {
+        *out_idx = (int)v - 1;
+        return true;
+    }
+    return false;
+}
+
+static bool terminal_find_contact(const char* arg,
+                                  const slopos::mesh::ContactInfo* contacts,
+                                  int total, int* out_idx)
+{
+    if (!arg || !arg[0] || !contacts || !out_idx) return false;
+    if (terminal_contact_index_from_arg(arg, total, out_idx)) return true;
+
+    for (int i = 0; i < total; ++i) {
+        if (strcmp(contacts[i].name, arg) == 0) {
+            *out_idx = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+static void terminal_describe_neighbors(char* result, size_t result_sz)
+{
+    slopos::mesh::ContactInfo contacts[32];
+    int total = slopos::mesh::exportContactsFull(contacts, 32);
+    if (total <= 0) {
+        snprintf(result, result_sz, "Neighbors: none known yet");
+        return;
+    }
+
+    int path_ready = 0;
+    for (int i = 0; i < total; ++i) {
+        if (slopos::mesh::contactHasPath(i)) path_ready++;
+    }
+
+    snprintf(result, result_sz, "Neighbors: %d known, %d path-ready. Ping with: ping <name|#>",
+             total, path_ready);
+}
+
+static void terminal_handle_ping(const TerminalCommandLine& parsed,
+                                 char* result, size_t result_sz)
+{
+    if (!parsed.arg[0]) {
+        snprintf(result, result_sz, "Local pong: %lums", millis());
+        return;
+    }
+
+    slopos::mesh::ContactInfo contacts[32];
+    int total = slopos::mesh::exportContactsFull(contacts, 32);
+    if (total <= 0) {
+        snprintf(result, result_sz, "Ping failed: no contacts known");
+        return;
+    }
+
+    int idx = -1;
+    if (!terminal_find_contact(parsed.arg, contacts, total, &idx)) {
+        snprintf(result, result_sz, "Ping failed: contact not found");
+        return;
+    }
+
+    if (!slopos::mesh::contactHasPath(idx)) {
+        snprintf(result, result_sz, "Ping %s failed: no route path", contacts[idx].name);
+        return;
+    }
+
+    uint32_t tag = 0;
+    bool ok = slopos::mesh::sendTrace(idx, &tag);
+    if (ok) {
+        snprintf(result, result_sz, "Ping %s sent, tag %lu",
+                 contacts[idx].name, (unsigned long)tag);
+    } else {
+        snprintf(result, result_sz, "Ping %s send failed", contacts[idx].name);
+    }
+}
+
 void terminal_screen_show()
 {
     lv_obj_t* scr = make_screen_full("Terminal");
@@ -918,9 +1002,10 @@ void terminal_screen_show()
         term_add_line(log_cont, echo);
 
         char result[256] = "";
-        if (strcmp(cmd, "help") == 0) {
-            snprintf(result, sizeof(result), "Commands: help status advert ping");
-        } else if (strcmp(cmd, "status") == 0) {
+        TerminalCommandLine parsed = terminal_parse_command(cmd);
+        if (parsed.type == TerminalCommand::Help) {
+            snprintf(result, sizeof(result), "Commands: help status advert neighbors ping <contact>");
+        } else if (parsed.type == TerminalCommand::Status) {
             int rssi  = slopos::mesh::getLastRSSI();
             float snr = slopos::mesh::getLastSNR();
             int noise = slopos::mesh::getNoiseFloor();
@@ -929,11 +1014,13 @@ void terminal_screen_show()
                 rssi, snr, noise,
                 slopos::mesh::getContactCount(),
                 slopos::mesh::getChannelCount());
-        } else if (strcmp(cmd, "advert") == 0) {
+        } else if (parsed.type == TerminalCommand::Advert) {
             bool ok = slopos::mesh::sendAdvert();
             snprintf(result, sizeof(result), ok ? "Advert sent" : "Send failed");
-        } else if (strcmp(cmd, "ping") == 0) {
-            snprintf(result, sizeof(result), "Pong! Uptime: %lums", millis());
+        } else if (parsed.type == TerminalCommand::Neighbors) {
+            terminal_describe_neighbors(result, sizeof(result));
+        } else if (parsed.type == TerminalCommand::Ping) {
+            terminal_handle_ping(parsed, result, sizeof(result));
         } else {
             snprintf(result, sizeof(result), "Unknown: %s  (type 'help')", cmd);
         }

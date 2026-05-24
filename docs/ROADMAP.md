@@ -24,6 +24,7 @@
 - Preserve SlopOS chat, channel, contact, trace, terminal, map, diagnostics, and advertise screens.
 - Add received-message RSSI/SNR metadata to the mesh queue and chat bubbles.
 - Add Win31 quick replies that expand `{name}`, `{channel}`, and `{time}` before populating the chat compose field.
+- Add terminal `neighbors` and `ping <name|#>` helpers backed by the existing MeshCore trace path.
 - Fill MC Term gaps for quick replies, message metadata, unread indicators, route hints, telemetry, raw packet logs, ping helpers, repeater/room admin, and settings depth.
 
 ## Phase 4 - Radio, Map, GPS, Diagnostics
