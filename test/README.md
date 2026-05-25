@@ -3,7 +3,7 @@
 ## Running Tests
 
 ```bash
-# Run all 185 tests on native platform (no hardware needed)
+# Run all 186 tests on native platform (no hardware needed)
 pio test -e native_test -v
 
 # Run specific test file
@@ -55,7 +55,7 @@ test/
 | GPS | 12 | NMEA parsing, coordinate conversion, fix detection |
 | Pin definitions | 9 | GPIO range, SPI/I2C conflicts, duplicates, LoRa params |
 | Trackball | 9 | Direction/click events, deadtime, idle calibration |
-| Terminal commands | 8 | Command parsing, ping arguments, neighbor aliases |
+| Terminal commands | 9 | Command parsing, ping arguments, neighbor aliases, scan commands |
 | Quick replies | 6 | Template variables, truncation, missing context values |
 | Theme constants | 5 | Win31 palette roles, distinctness, readability |
 | Build integration | 7 | Header inclusion, API existence, cross-module consistency |

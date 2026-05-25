@@ -2,10 +2,11 @@
 
 ## Phase 1 - Foundation
 
-- Public fork: `n30nex/MCWIN31`.
+- Public standalone repository: `n30nex/MCWIN31`.
+- Separate upstream contribution fork: `n30nex/SlopOS-tdeck`.
 - Build environment: `MCWIN31_TDeck`.
 - Keep upstream SlopOS internals for stability while product-facing identity moves to MCWIN31.
-- Keep `upstream` remote pointing at `hermes-gadget/SlopOS-tdeck`.
+- Keep the local MCWIN31 checkout pointed at its standalone `origin`; use the separate SlopOS fork for upstream contribution work.
 - Remove stale prebuilt SlopOS binaries from the firmware folder.
 
 ## Phase 2 - Windows 3.1 Shell
@@ -25,12 +26,13 @@
 - Add received-message RSSI/SNR metadata to the mesh queue and chat bubbles.
 - Add Win31 quick replies that expand `{name}`, `{channel}`, and `{time}` before populating the chat compose field.
 - Add terminal `neighbors` and `ping <name|#>` helpers backed by the existing MeshCore trace path.
+- Add terminal `scan` and `neighbors scan` helpers that trace-ping every path-ready contact.
 - Fill MC Term gaps for quick replies, message metadata, unread indicators, route hints, telemetry, raw packet logs, ping helpers, repeater/room admin, and settings depth.
 
 ## Phase 4 - Radio, Map, GPS, Diagnostics
 
 - Use a US/CA 902-928 MHz default profile.
-- Keep transmit blocked until Radio Setup is saved.
+- Keep message, advert, and trace transmit blocked until Radio Setup is saved.
 - Validate map cache, SD, GPS, battery, keyboard, touch, trackball, and SX1262 behavior on hardware.
 
 ## Phase 5 - Release

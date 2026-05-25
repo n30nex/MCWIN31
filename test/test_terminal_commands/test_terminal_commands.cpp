@@ -19,6 +19,7 @@ TEST(TerminalCommandsTest, ParsesSimpleCommands) {
     EXPECT_EQ(terminal_parse_command("help").type, TerminalCommand::Help);
     EXPECT_EQ(terminal_parse_command("status").type, TerminalCommand::Status);
     EXPECT_EQ(terminal_parse_command("advert").type, TerminalCommand::Advert);
+    EXPECT_EQ(terminal_parse_command("scan").type, TerminalCommand::Scan);
 }
 
 TEST(TerminalCommandsTest, ParsesPingWithoutArgument) {
@@ -42,11 +43,18 @@ TEST(TerminalCommandsTest, ParsesNeighborAliases) {
     EXPECT_EQ(terminal_parse_command("neighbour").type, TerminalCommand::Neighbors);
 }
 
+TEST(TerminalCommandsTest, ParsesNeighborsScanArgument) {
+    auto cmd = terminal_parse_command("neighbors scan");
+
+    EXPECT_EQ(cmd.type, TerminalCommand::Neighbors);
+    EXPECT_STREQ(cmd.arg, "scan");
+}
+
 TEST(TerminalCommandsTest, UnknownCommandPreservesOriginalInput) {
-    auto cmd = terminal_parse_command("scan now");
+    auto cmd = terminal_parse_command("trace now");
 
     EXPECT_EQ(cmd.type, TerminalCommand::Unknown);
-    EXPECT_STREQ(cmd.arg, "scan now");
+    EXPECT_STREQ(cmd.arg, "trace now");
 }
 
 TEST(TerminalCommandsTest, ArgumentIsTruncatedAndTerminated) {
@@ -61,6 +69,7 @@ TEST(TerminalCommandsTest, ArgumentIsTruncatedAndTerminated) {
 TEST(TerminalCommandsTest, CommandMatchingIsExact) {
     EXPECT_EQ(terminal_parse_command("helpful").type, TerminalCommand::Unknown);
     EXPECT_EQ(terminal_parse_command("pingpong").type, TerminalCommand::Unknown);
+    EXPECT_EQ(terminal_parse_command("scanner").type, TerminalCommand::Unknown);
 }
 
 } // namespace

@@ -932,6 +932,50 @@ static void terminal_handle_ping(const TerminalCommandLine& parsed,
     }
 }
 
+static void terminal_handle_neighbor_scan(char* result, size_t result_sz)
+{
+    slopos::mesh::ContactInfo contacts[32];
+    int total = slopos::mesh::exportContactsFull(contacts, 32);
+    if (total <= 0) {
+        snprintf(result, result_sz, "Scan failed: no contacts known");
+        return;
+    }
+
+    int path_ready = 0;
+    int sent = 0;
+    int failed = 0;
+    uint32_t first_tag = 0;
+    uint32_t last_tag = 0;
+
+    for (int i = 0; i < total; ++i) {
+        if (!slopos::mesh::contactHasPath(i)) continue;
+
+        path_ready++;
+        uint32_t tag = 0;
+        if (slopos::mesh::sendTrace(i, &tag)) {
+            if (sent == 0) first_tag = tag;
+            last_tag = tag;
+            sent++;
+        } else {
+            failed++;
+        }
+    }
+
+    if (path_ready == 0) {
+        snprintf(result, result_sz, "Scan skipped: no path-ready contacts");
+    } else if (sent == 0) {
+        snprintf(result, result_sz, "Scan failed: %d path-ready, %d send failures",
+                 path_ready, failed);
+    } else if (failed == 0) {
+        snprintf(result, result_sz, "Neighbor scan sent: %d trace ping%s, tags %lu-%lu",
+                 sent, sent == 1 ? "" : "s",
+                 (unsigned long)first_tag, (unsigned long)last_tag);
+    } else {
+        snprintf(result, result_sz, "Neighbor scan partial: %d sent, %d failed, %d path-ready",
+                 sent, failed, path_ready);
+    }
+}
+
 void terminal_screen_show()
 {
     lv_obj_t* scr = make_screen_full("Terminal");
@@ -1004,7 +1048,7 @@ void terminal_screen_show()
         char result[256] = "";
         TerminalCommandLine parsed = terminal_parse_command(cmd);
         if (parsed.type == TerminalCommand::Help) {
-            snprintf(result, sizeof(result), "Commands: help status advert neighbors ping <contact>");
+            snprintf(result, sizeof(result), "Commands: help status advert neighbors scan ping <contact>");
         } else if (parsed.type == TerminalCommand::Status) {
             int rssi  = slopos::mesh::getLastRSSI();
             float snr = slopos::mesh::getLastSNR();
@@ -1018,7 +1062,13 @@ void terminal_screen_show()
             bool ok = slopos::mesh::sendAdvert();
             snprintf(result, sizeof(result), ok ? "Advert sent" : "Send failed");
         } else if (parsed.type == TerminalCommand::Neighbors) {
-            terminal_describe_neighbors(result, sizeof(result));
+            if (strcmp(parsed.arg, "scan") == 0) {
+                terminal_handle_neighbor_scan(result, sizeof(result));
+            } else {
+                terminal_describe_neighbors(result, sizeof(result));
+            }
+        } else if (parsed.type == TerminalCommand::Scan) {
+            terminal_handle_neighbor_scan(result, sizeof(result));
         } else if (parsed.type == TerminalCommand::Ping) {
             terminal_handle_ping(parsed, result, sizeof(result));
         } else {

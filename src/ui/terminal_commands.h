@@ -14,6 +14,7 @@ enum class TerminalCommand {
     Advert,
     Ping,
     Neighbors,
+    Scan,
     Unknown,
 };
 
@@ -67,6 +68,8 @@ inline TerminalCommandLine terminal_parse_command(const char* input)
         out.type = TerminalCommand::Advert;
     } else if (terminal_token_equals(token, token_len, "ping")) {
         out.type = TerminalCommand::Ping;
+    } else if (terminal_token_equals(token, token_len, "scan")) {
+        out.type = TerminalCommand::Scan;
     } else if (terminal_token_equals(token, token_len, "neighbors") ||
                terminal_token_equals(token, token_len, "neighbours") ||
                terminal_token_equals(token, token_len, "neighbor") ||

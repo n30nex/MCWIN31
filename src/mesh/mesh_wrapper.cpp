@@ -406,7 +406,7 @@ uint32_t makeEpoch(int year, int month, int day, int hour, int minute) {
 static uint32_t trace_tag_counter = 0;
 
 bool sendTrace(int contact_idx, uint32_t* out_tag) {
-    if (!g_mesh) return false;
+    if (!g_mesh || !radio_tx_enabled()) return false;
     uint32_t tag = ++trace_tag_counter;
     if (out_tag) *out_tag = tag;
     return g_mesh->sendTrace(contact_idx, tag);
