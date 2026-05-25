@@ -20,6 +20,8 @@ TEST(TerminalCommandsTest, ParsesSimpleCommands) {
     EXPECT_EQ(terminal_parse_command("status").type, TerminalCommand::Status);
     EXPECT_EQ(terminal_parse_command("advert").type, TerminalCommand::Advert);
     EXPECT_EQ(terminal_parse_command("scan").type, TerminalCommand::Scan);
+    EXPECT_EQ(terminal_parse_command("copy").type, TerminalCommand::Copy);
+    EXPECT_EQ(terminal_parse_command("paste").type, TerminalCommand::Paste);
 }
 
 TEST(TerminalCommandsTest, ParsesPingWithoutArgument) {
@@ -50,6 +52,18 @@ TEST(TerminalCommandsTest, ParsesNeighborsScanArgument) {
     EXPECT_STREQ(cmd.arg, "scan");
 }
 
+TEST(TerminalCommandsTest, ParsesClipboardAliases) {
+    EXPECT_EQ(terminal_parse_command("clip").type, TerminalCommand::Clipboard);
+    EXPECT_EQ(terminal_parse_command("clipboard").type, TerminalCommand::Clipboard);
+}
+
+TEST(TerminalCommandsTest, ParsesCopyArgumentAndTrimsWhitespace) {
+    auto cmd = terminal_parse_command("  copy   meet at the repeater  \r\n");
+
+    EXPECT_EQ(cmd.type, TerminalCommand::Copy);
+    EXPECT_STREQ(cmd.arg, "meet at the repeater");
+}
+
 TEST(TerminalCommandsTest, UnknownCommandPreservesOriginalInput) {
     auto cmd = terminal_parse_command("trace now");
 
@@ -70,6 +84,7 @@ TEST(TerminalCommandsTest, CommandMatchingIsExact) {
     EXPECT_EQ(terminal_parse_command("helpful").type, TerminalCommand::Unknown);
     EXPECT_EQ(terminal_parse_command("pingpong").type, TerminalCommand::Unknown);
     EXPECT_EQ(terminal_parse_command("scanner").type, TerminalCommand::Unknown);
+    EXPECT_EQ(terminal_parse_command("clipboarder").type, TerminalCommand::Unknown);
 }
 
 } // namespace

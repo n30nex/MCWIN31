@@ -15,12 +15,15 @@ enum class TerminalCommand {
     Ping,
     Neighbors,
     Scan,
+    Clipboard,
+    Copy,
+    Paste,
     Unknown,
 };
 
 struct TerminalCommandLine {
     TerminalCommand type;
-    char arg[64];
+    char arg[192];
 };
 
 inline bool terminal_is_space(char c)
@@ -70,6 +73,13 @@ inline TerminalCommandLine terminal_parse_command(const char* input)
         out.type = TerminalCommand::Ping;
     } else if (terminal_token_equals(token, token_len, "scan")) {
         out.type = TerminalCommand::Scan;
+    } else if (terminal_token_equals(token, token_len, "clip") ||
+               terminal_token_equals(token, token_len, "clipboard")) {
+        out.type = TerminalCommand::Clipboard;
+    } else if (terminal_token_equals(token, token_len, "copy")) {
+        out.type = TerminalCommand::Copy;
+    } else if (terminal_token_equals(token, token_len, "paste")) {
+        out.type = TerminalCommand::Paste;
     } else if (terminal_token_equals(token, token_len, "neighbors") ||
                terminal_token_equals(token, token_len, "neighbours") ||
                terminal_token_equals(token, token_len, "neighbor") ||

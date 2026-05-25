@@ -30,6 +30,7 @@
 #include "hal/battery.h"
 #include "hal/display.h"
 #include "hal/touch.h"
+#include "hal/clipboard.h"
 #include "hal/keyboard.h"
 #include "hal/trackball.h"
 #include "hal/gps.h"

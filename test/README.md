@@ -3,7 +3,7 @@
 ## Running Tests
 
 ```bash
-# Run all 186 tests on native platform (no hardware needed)
+# Run all 192 tests on native platform (no hardware needed)
 pio test -e native_test -v
 
 # Run specific test file
@@ -15,61 +15,65 @@ pio test -e native_test -vv
 
 ## Test Structure
 
-```
+```text
 test/
-├── mocks/                     # Mock headers for native testing (no hardware needed)
-│   ├── Arduino.h              # Mock Arduino core (millis, GPIO, Serial, SPI, Wire)
-│   ├── lvgl.h                 # Mock LVGL v9 API (all UI objects stubbed)
-│   ├── RadioLib.h             # Mock SX1262 radio driver
-│   ├── LovyanGFX.hpp          # Mock LovyanGFX display driver
-│   ├── MeshCore.h             # Mock MeshCore base classes
-│   └── mesh_helpers.h         # Mock AutoDiscoverRTCClock, StdRNG
-├── test_battery/              # Battery mV→% conversion, ADC math, edge cases
-├── test_build/                # All headers compile together, cross-module consistency
-├── test_gps/                  # NMEA parsing, coordinate conversion, fix detection
-├── test_keyboard/             # Matrix scan, keymap, debounce, ghost detection
-├── test_map/                  # Tile math (lat/lon→tile), zoom levels
-├── test_mesh_messaging/       # Message queue, send/receive, channel ops
-├── test_mesh_wrapper/         # Mesh API contract, return value ranges
-├── test_navigation/           # Screen routing state machine, back nav
-├── test_pins/                 # Pin conflicts, GPIO ranges, bus consistency
-├── test_quick_reply/          # Quick-reply template expansion
-├── test_sdcard/               # SPI init, mount, read/write, edge cases
-├── test_terminal_commands/    # Terminal command parsing
-├── test_theme/                # Color constants, distinctness, brightness
-└── test_touch/                # GT911 coordinate mapping, multitouch, lifecycle
+|-- mocks/                    # Mock headers for native testing
+|   |-- Arduino.h             # Mock Arduino core
+|   |-- lvgl.h                # Mock LVGL v9 API
+|   |-- RadioLib.h            # Mock SX1262 radio driver
+|   |-- LovyanGFX.hpp         # Mock LovyanGFX display driver
+|   |-- MeshCore.h            # Mock MeshCore base classes
+|   `-- mesh_helpers.h        # Mock AutoDiscoverRTCClock, StdRNG
+|-- test_battery/             # Battery mV to percent conversion
+|-- test_build/               # Headers compile together
+|-- test_clipboard/           # Clipboard normalization and truncation
+|-- test_gps/                 # NMEA parsing and fix detection
+|-- test_keyboard/            # Matrix scan, keymap, debounce
+|-- test_map/                 # Tile math and zoom levels
+|-- test_mesh_messaging/      # Message queue and channel ops
+|-- test_mesh_wrapper/        # Mesh API contract
+|-- test_navigation/          # Screen routing and back nav
+|-- test_pins/                # Pin conflicts and bus consistency
+|-- test_quick_reply/         # Quick-reply template expansion
+|-- test_sdcard/              # SPI init, mount, read/write
+|-- test_terminal_commands/   # Terminal command parsing
+|-- test_theme/               # Color constants and readability
+|-- test_trackball/           # Direction/click events
+`-- test_touch/               # GT911 coordinate mapping
 ```
 
 ## What's Tested
 
 | Module | Tests | Coverage |
 |--------|-------|----------|
-| Touch (GT911) | 22 | Coordinate mapping, multitouch, press→release, edge cases |
+| Touch (GT911) | 22 | Coordinate mapping, multitouch, press to release, edge cases |
 | Keyboard | 20 | Matrix scan, keymap, debounce, ghost detection, LVGL mapping |
-| Battery HAL | 16 | mV→%, clamping, monotonicity, ADC math, edge cases |
+| Battery HAL | 16 | mV to percent, clamping, monotonicity, ADC math, edge cases |
 | SD Card | 15 | SPI init, mount, read/write, directory listing, edge cases |
 | Mesh messaging | 15 | Message queue, send/receive, channel ops, contact export |
-| Map renderer | 14 | Tile math (lat/lon→tile), zoom levels, bounding box |
+| Map renderer | 14 | Tile math, zoom levels, bounding box |
 | Mesh wrapper | 15 | API signatures, return ranges, message metadata, unread count init |
 | Navigation | 12 | Forward/back, history stack, deep nav, all pairs |
+| Terminal commands | 11 | Command parsing, ping arguments, neighbor aliases, scan and clipboard commands |
 | GPS | 12 | NMEA parsing, coordinate conversion, fix detection |
 | Pin definitions | 9 | GPIO range, SPI/I2C conflicts, duplicates, LoRa params |
 | Trackball | 9 | Direction/click events, deadtime, idle calibration |
-| Terminal commands | 9 | Command parsing, ping arguments, neighbor aliases, scan commands |
 | Quick replies | 6 | Template variables, truncation, missing context values |
 | Theme constants | 5 | Win31 palette roles, distinctness, readability |
+| Clipboard | 4 | Text trimming, control-character cleanup, truncation |
 | Build integration | 7 | Header inclusion, API existence, cross-module consistency |
 
 ## Adding New Tests
 
-1. Create `test/test_newthing/` directory with `main.cpp` + `test_newthing.cpp`
-2. Include the header(s) under test + `gtest/gtest.h`
-3. Use `arduino_mock::reset()` in SetUp for clean state
-4. Follow AAA pattern: Arrange, Act, Assert
-5. Use `EXPECT_*` for non-fatal assertions, `ASSERT_*` for fatal
+1. Create `test/test_newthing/` with `main.cpp` and `test_newthing.cpp`.
+2. Include the header under test plus `gtest/gtest.h`.
+3. Use `arduino_mock::reset()` in `SetUp()` for clean state when needed.
+4. Follow Arrange, Act, Assert.
+5. Use `EXPECT_*` for non-fatal assertions and `ASSERT_*` for fatal assertions.
 
 ### Mock Guidelines
-- `arduino_mock::current_millis` — control time
-- `arduino_mock::analog_values[pin]` — set ADC values
-- `arduino_mock::pin_states[pin]` — set digital pin states
-- All LVGL object creation returns dummy objects (no rendering)
+
+- `arduino_mock::current_millis`: control time.
+- `arduino_mock::analog_values[pin]`: set ADC values.
+- `arduino_mock::pin_states[pin]`: set digital pin states.
+- LVGL object creation returns dummy objects and does not render.

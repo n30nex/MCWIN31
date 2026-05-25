@@ -17,7 +17,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Settings and radio setup | Partial | US/CA profile and save-to-enable-TX flow started; date/time and keyboard backlight dialogs use shared Win31 chrome. |
 | Terminal and trace | Partial | Existing behavior retained. |
 | Signal/noise diagnostics | Partial | Existing behavior retained. |
-| Native unit tests | Done | `pio test -e native_test -v` passes with 185 succeeded and 1 expected native ESP32 skip. |
+| Native unit tests | Done | `pio test -e native_test -v` passes with 191 succeeded and 1 expected native ESP32 skip. |
 
 ## MC Term Reference
 
@@ -34,6 +34,6 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Wi-Fi and BLE settings | Todo | Not implemented yet. |
 | GPS distance tracking with advert flooding | Todo | GPS parser preserved; tracking flow pending. |
 | Map tile cache behavior | Partial | SlopOS offline renderer retained; MC Term parity pending. |
-| Clipboard persistence | Todo | Not implemented yet. |
+| Clipboard persistence | Partial | Terminal now supports persisted `copy <text>`, `paste`, `clip`, and `clipboard` commands backed by NVS; Settings can clear the clipboard; chat copy/paste controls pending. |
 | Room/repeater admin flows | Todo | Not implemented yet. |
 | Embedded web UI | Deferred | Feasibility depends on flash/RAM budget after core parity. |

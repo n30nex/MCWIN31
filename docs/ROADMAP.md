@@ -27,6 +27,7 @@
 - Add Win31 quick replies that expand `{name}`, `{channel}`, and `{time}` before populating the chat compose field.
 - Add terminal `neighbors` and `ping <name|#>` helpers backed by the existing MeshCore trace path.
 - Add terminal `scan` and `neighbors scan` helpers that trace-ping every path-ready contact.
+- Add NVS-backed terminal clipboard commands and a Settings row to clear persisted clipboard text.
 - Fill MC Term gaps for quick replies, message metadata, unread indicators, route hints, telemetry, raw packet logs, ping helpers, repeater/room admin, and settings depth.
 
 ## Phase 4 - Radio, Map, GPS, Diagnostics

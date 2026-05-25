@@ -30,6 +30,7 @@
 #include "../hal/gps.h"
 #include "../hal/prefs.h"
 #include "../hal/keyboard.h"
+#include "../hal/clipboard.h"
 #include "../mesh/mesh_wrapper.h"
 #include "../mesh/radio_profile.h"
 #include "../app/map_renderer.h"
@@ -802,6 +803,21 @@ void settings_screen_show()
         datetime_set_dialog(lv_obj_get_screen((lv_obj_t*)lv_event_get_target(e)), false);
     }, LV_EVENT_CLICKED, nullptr);
 
+    // Clipboard
+    char clip[slopos::CLIPBOARD_TEXT_MAX];
+    bool clip_ok = slopos::clipboard_load(clip, sizeof(clip));
+    snprintf(buf, sizeof(buf), "  Clipboard: %s",
+             clip_ok && clip[0] ? "Stored - tap to clear" : "Empty");
+    lv_obj_t* btn_clip = add_row(LV_SYMBOL_SETTINGS, buf);
+    lv_obj_add_event_cb(btn_clip, [](lv_event_t* e) {
+        lv_obj_t* row_ref = (lv_obj_t*)lv_event_get_target(e);
+        if (slopos::clipboard_clear()) {
+            update_row_label(row_ref, "  Clipboard: Empty");
+        } else {
+            update_row_label(row_ref, "  Clipboard: Clear failed");
+        }
+    }, LV_EVENT_CLICKED, nullptr);
+
     // Version
     snprintf(buf, sizeof(buf), "  MCWIN31 " SLOPOS_VERSION);
     add_row(LV_SYMBOL_HOME, buf);
@@ -976,6 +992,35 @@ static void terminal_handle_neighbor_scan(char* result, size_t result_sz)
     }
 }
 
+static void terminal_describe_clipboard(char* result, size_t result_sz)
+{
+    char clip[slopos::CLIPBOARD_TEXT_MAX];
+    if (!slopos::clipboard_load(clip, sizeof(clip))) {
+        snprintf(result, result_sz, "Clipboard unavailable");
+    } else if (!clip[0]) {
+        snprintf(result, result_sz, "Clipboard empty");
+    } else {
+        snprintf(result, result_sz, "Clipboard: %s", clip);
+    }
+}
+
+static void terminal_handle_copy(const TerminalCommandLine& parsed,
+                                 char* result, size_t result_sz)
+{
+    if (!parsed.arg[0]) {
+        snprintf(result, result_sz, "Copy failed: no text");
+        return;
+    }
+
+    if (slopos::clipboard_save(parsed.arg)) {
+        char clip[slopos::CLIPBOARD_TEXT_MAX];
+        slopos::clipboard_prepare_text(clip, sizeof(clip), parsed.arg);
+        snprintf(result, result_sz, "Copied %u chars", (unsigned)strlen(clip));
+    } else {
+        snprintf(result, result_sz, "Copy failed: clipboard unavailable");
+    }
+}
+
 void terminal_screen_show()
 {
     lv_obj_t* scr = make_screen_full("Terminal");
@@ -1046,9 +1091,10 @@ void terminal_screen_show()
         term_add_line(log_cont, echo);
 
         char result[256] = "";
+        bool clear_input = true;
         TerminalCommandLine parsed = terminal_parse_command(cmd);
         if (parsed.type == TerminalCommand::Help) {
-            snprintf(result, sizeof(result), "Commands: help status advert neighbors scan ping <contact>");
+            snprintf(result, sizeof(result), "Commands: help status advert neighbors scan ping copy paste clip");
         } else if (parsed.type == TerminalCommand::Status) {
             int rssi  = slopos::mesh::getLastRSSI();
             float snr = slopos::mesh::getLastSNR();
@@ -1071,12 +1117,27 @@ void terminal_screen_show()
             terminal_handle_neighbor_scan(result, sizeof(result));
         } else if (parsed.type == TerminalCommand::Ping) {
             terminal_handle_ping(parsed, result, sizeof(result));
+        } else if (parsed.type == TerminalCommand::Clipboard) {
+            terminal_describe_clipboard(result, sizeof(result));
+        } else if (parsed.type == TerminalCommand::Copy) {
+            terminal_handle_copy(parsed, result, sizeof(result));
+        } else if (parsed.type == TerminalCommand::Paste) {
+            char clip[slopos::CLIPBOARD_TEXT_MAX];
+            if (!slopos::clipboard_load(clip, sizeof(clip))) {
+                snprintf(result, sizeof(result), "Paste failed: clipboard unavailable");
+            } else if (!clip[0]) {
+                snprintf(result, sizeof(result), "Clipboard empty");
+            } else {
+                lv_textarea_set_text(ta, clip);
+                clear_input = false;
+                snprintf(result, sizeof(result), "Clipboard pasted to input");
+            }
         } else {
             snprintf(result, sizeof(result), "Unknown: %s  (type 'help')", cmd);
         }
 
         term_add_line(log_cont, result);
-        lv_textarea_set_text(ta, "");
+        if (clear_input) lv_textarea_set_text(ta, "");
     }, LV_EVENT_READY, log);
 
     show_screen(scr);
