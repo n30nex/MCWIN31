@@ -64,6 +64,16 @@ TEST(TerminalCommandsTest, ParsesDiagnosticsAliases) {
     EXPECT_EQ(terminal_parse_command("rxlog").type, TerminalCommand::Diagnostics);
 }
 
+TEST(TerminalCommandsTest, ParsesDiagnosticsArguments) {
+    auto list_cmd = terminal_parse_command("diag list");
+    EXPECT_EQ(list_cmd.type, TerminalCommand::Diagnostics);
+    EXPECT_STREQ(list_cmd.arg, "list");
+
+    auto clear_cmd = terminal_parse_command("rxlog clear");
+    EXPECT_EQ(clear_cmd.type, TerminalCommand::Diagnostics);
+    EXPECT_STREQ(clear_cmd.arg, "clear");
+}
+
 TEST(TerminalCommandsTest, ParsesCopyArgumentAndTrimsWhitespace) {
     auto cmd = terminal_parse_command("  copy   meet at the repeater  \r\n");
 

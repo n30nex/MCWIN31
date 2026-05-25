@@ -28,14 +28,14 @@
 - Add terminal `neighbors` and `ping <name|#>` helpers backed by the existing MeshCore trace path.
 - Add terminal `scan` and `neighbors scan` helpers that trace-ping every path-ready contact.
 - Add NVS-backed terminal clipboard commands and a Settings row to clear persisted clipboard text.
-- Add a fixed-size mesh diagnostics ring for raw RX, raw custom, control data, and path callbacks, with terminal `diag`/`diagnostics`/`rxlog` summary commands.
+- Add a fixed-size mesh diagnostics ring for raw RX, raw custom, control data, and path callbacks, with terminal `diag`/`diagnostics`/`rxlog` latest-event, history/list, and clear commands.
 - Fill MC Term gaps for quick replies, message metadata, unread indicators, route hints, telemetry, raw packet logs, ping helpers, repeater/room admin, and settings depth.
 
 ## Phase 4 - Radio, Map, GPS, Diagnostics
 
 - Use a US/CA 902-928 MHz default profile.
 - Keep message, advert, and trace transmit blocked until Radio Setup is saved.
-- Mesh diagnostics ring behavior and native ring tests are validated; next step is hardware RX/TX capture on the T-Deck Plus.
+- Mesh diagnostics ring behavior and terminal latest/history/clear native tests are validated; next step is hardware RX/TX capture on the T-Deck Plus.
 - Validate map cache, SD, GPS, battery, keyboard, touch, trackball, and SX1262 behavior on hardware.
 
 ## Phase 5 - Release

@@ -3,7 +3,7 @@
 ## Running Tests
 
 ```bash
-# Run all 205 currently registered native tests on native platform (no hardware needed)
+# Run all 213 currently registered native tests on native platform (no hardware needed)
 pio test -e native_test -v
 
 # Run specific test file
@@ -37,7 +37,8 @@ test/
 |-- test_pins/                # Pin conflicts and bus consistency
 |-- test_quick_reply/         # Quick-reply template expansion
 |-- test_sdcard/              # SPI init, mount, read/write
-|-- test_terminal_commands/   # Terminal command parsing
+|-- test_terminal_commands/   # Terminal command parsing, including diagnostics controls
+|-- test_terminal_diagnostics/# Terminal diagnostics output formatting
 |-- test_theme/               # Color constants and readability
 |-- test_trackball/           # Direction/click events
 `-- test_touch/               # GT911 coordinate mapping
@@ -56,7 +57,8 @@ test/
 | Map renderer | 14 | Tile math, zoom levels, bounding box |
 | Mesh wrapper | 16 | API signatures, return ranges, message metadata, unread count init |
 | Navigation | 12 | Forward/back, history stack, deep nav, all pairs |
-| Terminal commands | 12 | Command parsing, ping arguments, neighbor aliases, scan, diagnostics, and clipboard commands |
+| Terminal commands | 13 | Command parsing, ping arguments, neighbor aliases, scan, diagnostics arguments, and clipboard commands |
+| Terminal diagnostics | 7 | Latest event, history/list, clear, usage, metadata, and sample formatting |
 | GPS | 12 | NMEA parsing, coordinate conversion, fix detection |
 | Pin definitions | 9 | GPIO range, SPI/I2C conflicts, duplicates, LoRa params |
 | Trackball | 9 | Direction/click events, deadtime, idle calibration |

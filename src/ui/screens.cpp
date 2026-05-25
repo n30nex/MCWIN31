@@ -24,6 +24,7 @@
 #include "responsive.h"
 #include "home_screen.h"
 #include "terminal_commands.h"
+#include "terminal_diagnostics.h"
 #include "../hal/tdeck_pins.h"
 #include "../hal/battery.h"
 #include "../hal/sdcard.h"
@@ -1021,49 +1022,6 @@ static void terminal_handle_copy(const TerminalCommandLine& parsed,
     }
 }
 
-static void terminal_format_sample(const slopos::mesh::MeshDiagnosticEvent& event,
-                                   char* out, size_t out_sz)
-{
-    if (!out || out_sz == 0) return;
-    if (event.sample_len == 0) {
-        snprintf(out, out_sz, "-");
-        return;
-    }
-
-    size_t used = 0;
-    for (uint8_t i = 0; i < event.sample_len && used < out_sz; ++i) {
-        int written = snprintf(out + used, out_sz - used, "%s%02X",
-                               i == 0 ? "" : " ", event.sample[i]);
-        if (written <= 0) break;
-        used += (size_t)written;
-        if (used >= out_sz) {
-            out[out_sz - 1] = '\0';
-            break;
-        }
-    }
-}
-
-static void terminal_describe_diagnostics(char* result, size_t result_sz)
-{
-    slopos::mesh::MeshDiagnosticEvent events[slopos::mesh::DIAGNOSTIC_RING_MAX];
-    int n = slopos::mesh::exportDiagnostics(events, slopos::mesh::DIAGNOSTIC_RING_MAX);
-    if (n <= 0) {
-        snprintf(result, result_sz, "Diag: no mesh events yet");
-        return;
-    }
-
-    const auto& event = events[n - 1];
-    char sample[slopos::mesh::DIAGNOSTIC_SAMPLE_MAX * 3 + 1];
-    terminal_format_sample(event, sample, sizeof(sample));
-
-    snprintf(result, result_sz,
-             "Diag latest (%d stored): %s len=%u path=%u RSSI:%d SNR:%.1f peer:%s sample:%s",
-             slopos::mesh::diagnosticEventCount(),
-             slopos::mesh::diagnostic_event_type_name(event.type),
-             event.payload_len, event.path_len, event.rssi, event.snr,
-             event.peer[0] ? event.peer : "-", sample);
-}
-
 void terminal_screen_show()
 {
     lv_obj_t* scr = make_screen_full("Terminal");
@@ -1137,7 +1095,7 @@ void terminal_screen_show()
         bool clear_input = true;
         TerminalCommandLine parsed = terminal_parse_command(cmd);
         if (parsed.type == TerminalCommand::Help) {
-            snprintf(result, sizeof(result), "Commands: help status advert neighbors scan ping diag copy paste clip");
+            snprintf(result, sizeof(result), "Commands: help status advert neighbors scan ping diag [list|clear] copy paste clip");
         } else if (parsed.type == TerminalCommand::Status) {
             int rssi  = slopos::mesh::getLastRSSI();
             float snr = slopos::mesh::getLastSNR();
@@ -1161,7 +1119,7 @@ void terminal_screen_show()
         } else if (parsed.type == TerminalCommand::Ping) {
             terminal_handle_ping(parsed, result, sizeof(result));
         } else if (parsed.type == TerminalCommand::Diagnostics) {
-            terminal_describe_diagnostics(result, sizeof(result));
+            terminal_describe_diagnostics(parsed, result, sizeof(result));
         } else if (parsed.type == TerminalCommand::Clipboard) {
             terminal_describe_clipboard(result, sizeof(result));
         } else if (parsed.type == TerminalCommand::Copy) {
