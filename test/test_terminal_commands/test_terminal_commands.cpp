@@ -20,6 +20,7 @@ TEST(TerminalCommandsTest, ParsesSimpleCommands) {
     EXPECT_EQ(terminal_parse_command("status").type, TerminalCommand::Status);
     EXPECT_EQ(terminal_parse_command("advert").type, TerminalCommand::Advert);
     EXPECT_EQ(terminal_parse_command("scan").type, TerminalCommand::Scan);
+    EXPECT_EQ(terminal_parse_command("diag").type, TerminalCommand::Diagnostics);
     EXPECT_EQ(terminal_parse_command("copy").type, TerminalCommand::Copy);
     EXPECT_EQ(terminal_parse_command("paste").type, TerminalCommand::Paste);
 }
@@ -55,6 +56,12 @@ TEST(TerminalCommandsTest, ParsesNeighborsScanArgument) {
 TEST(TerminalCommandsTest, ParsesClipboardAliases) {
     EXPECT_EQ(terminal_parse_command("clip").type, TerminalCommand::Clipboard);
     EXPECT_EQ(terminal_parse_command("clipboard").type, TerminalCommand::Clipboard);
+}
+
+TEST(TerminalCommandsTest, ParsesDiagnosticsAliases) {
+    EXPECT_EQ(terminal_parse_command("diag").type, TerminalCommand::Diagnostics);
+    EXPECT_EQ(terminal_parse_command("diagnostics").type, TerminalCommand::Diagnostics);
+    EXPECT_EQ(terminal_parse_command("rxlog").type, TerminalCommand::Diagnostics);
 }
 
 TEST(TerminalCommandsTest, ParsesCopyArgumentAndTrimsWhitespace) {

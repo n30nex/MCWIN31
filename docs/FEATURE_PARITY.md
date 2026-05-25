@@ -15,9 +15,9 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | Channels | Partial | Existing behavior retained; add-channel dialog uses shared Win31 chrome. |
 | Map | Partial | Existing renderer retained. |
 | Settings and radio setup | Partial | US/CA profile and save-to-enable-TX flow started; date/time and keyboard backlight dialogs use shared Win31 chrome. |
-| Terminal and trace | Partial | Existing behavior retained. |
+| Terminal and trace | Partial | Existing behavior retained; `diag`/`diagnostics`/`rxlog` shows the latest mesh diagnostics event summary. |
 | Signal/noise diagnostics | Partial | Existing behavior retained. |
-| Native unit tests | Done | `pio test -e native_test -v` passes with 191 succeeded and 1 expected native ESP32 skip. |
+| Native unit tests | Done | Last validated `pio test -e native_test -v` pass had 204 succeeded and 1 expected native ESP32 skip. |
 
 ## MC Term Reference
 
@@ -29,7 +29,7 @@ Status values: `Done`, `Partial`, `Todo`, `Deferred`.
 | DM/channel message metadata | Partial | Received messages now carry and render RSSI/SNR; path, hops, delivery state, and repeater hints pending. |
 | Quick replies with variables | Partial | Canned quick replies expand `{name}`, `{channel}`, and `{time}` into the chat compose field; per-channel preset editing pending. |
 | Telemetry request/history | Todo | Not implemented yet. |
-| Raw RX log and parsed packet detail | Todo | Not implemented yet. |
+| Raw RX log and parsed packet detail | Partial | Fixed-size mesh diagnostics ring captures raw RX, raw custom, control data, and path callbacks; terminal `diag`/`diagnostics`/`rxlog` shows the latest event summary. Parsed packet detail and validation pending. |
 | Ping and neighbor scan helpers | Partial | Terminal now supports `neighbors`, `ping <name|#>`, `scan`, and `neighbors scan` using the existing MeshCore trace path; UI scan history/detail pending. |
 | Wi-Fi and BLE settings | Todo | Not implemented yet. |
 | GPS distance tracking with advert flooding | Todo | GPS parser preserved; tracking flow pending. |

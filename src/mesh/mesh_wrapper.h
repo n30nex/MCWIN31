@@ -6,6 +6,7 @@
 
 #pragma once
 #include <cstdint>
+#include "mesh_diagnostics.h"
 
 namespace slopos {
 namespace mesh {
@@ -69,6 +70,11 @@ uint8_t getTracePathLen();
 void   getTracePath(uint8_t* snrs_out, uint8_t* hashes_out);
 void   clearTraceResult();
 bool   contactHasPath(int contact_idx);
+
+// Mesh diagnostics
+int  diagnosticEventCount();
+int  exportDiagnostics(MeshDiagnosticEvent* out, int max);
+void clearDiagnostics();
 
 } // namespace mesh
 } // namespace slopos

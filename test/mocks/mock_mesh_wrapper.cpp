@@ -15,7 +15,7 @@ static float           mock_snr   = 5.0f;
 
 // ── Lifecycle ────────────────────────────────────
 
-bool init() { return true; }
+bool init(bool spiffs_ok) { (void)spiffs_ok; return true; }
 void loop() {}
 
 // ── Send ─────────────────────────────────────────
@@ -85,5 +85,17 @@ void mock_push_message(const char* sender, const char* text) {
 void mock_set_noise(int v)  { mock_noise = v; }
 void mock_set_rssi(int v)   { mock_rssi = v; }
 void mock_set_snr(float v)  { mock_snr = v; }
+
+int diagnosticEventCount() {
+    return diagnostics_count();
+}
+
+int exportDiagnostics(MeshDiagnosticEvent* out, int max) {
+    return diagnostics_export(out, max);
+}
+
+void clearDiagnostics() {
+    diagnostics_clear();
+}
 
 } // namespace slopos::mesh

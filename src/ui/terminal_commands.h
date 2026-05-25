@@ -15,6 +15,7 @@ enum class TerminalCommand {
     Ping,
     Neighbors,
     Scan,
+    Diagnostics,
     Clipboard,
     Copy,
     Paste,
@@ -73,6 +74,10 @@ inline TerminalCommandLine terminal_parse_command(const char* input)
         out.type = TerminalCommand::Ping;
     } else if (terminal_token_equals(token, token_len, "scan")) {
         out.type = TerminalCommand::Scan;
+    } else if (terminal_token_equals(token, token_len, "diag") ||
+               terminal_token_equals(token, token_len, "diagnostics") ||
+               terminal_token_equals(token, token_len, "rxlog")) {
+        out.type = TerminalCommand::Diagnostics;
     } else if (terminal_token_equals(token, token_len, "clip") ||
                terminal_token_equals(token, token_len, "clipboard")) {
         out.type = TerminalCommand::Clipboard;

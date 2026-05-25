@@ -49,6 +49,10 @@ TEST_F(MeshWrapperTest, InitFunctionExists) {
     SUCCEED();
 }
 
+TEST_F(MeshWrapperTest, InitAcceptsExplicitSpiffsFlag) {
+    EXPECT_TRUE(slopos::mesh::init(false));
+}
+
 TEST_F(MeshWrapperTest, LoopFunctionExists) {
     using loop_fn = void (*)();
     (void)static_cast<loop_fn>(slopos::mesh::loop);

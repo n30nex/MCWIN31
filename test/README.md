@@ -3,7 +3,7 @@
 ## Running Tests
 
 ```bash
-# Run all 192 tests on native platform (no hardware needed)
+# Run all 205 currently registered native tests on native platform (no hardware needed)
 pio test -e native_test -v
 
 # Run specific test file
@@ -31,6 +31,7 @@ test/
 |-- test_keyboard/            # Matrix scan, keymap, debounce
 |-- test_map/                 # Tile math and zoom levels
 |-- test_mesh_messaging/      # Message queue and channel ops
+|-- test_mesh_diagnostics/    # Diagnostics ring capture and event summaries
 |-- test_mesh_wrapper/        # Mesh API contract
 |-- test_navigation/          # Screen routing and back nav
 |-- test_pins/                # Pin conflicts and bus consistency
@@ -51,10 +52,11 @@ test/
 | Battery HAL | 16 | mV to percent, clamping, monotonicity, ADC math, edge cases |
 | SD Card | 15 | SPI init, mount, read/write, directory listing, edge cases |
 | Mesh messaging | 15 | Message queue, send/receive, channel ops, contact export |
+| Mesh diagnostics | 11 | Fixed-size RX/custom/control/path callback ring, truncation, wrap, clear, type names |
 | Map renderer | 14 | Tile math, zoom levels, bounding box |
-| Mesh wrapper | 15 | API signatures, return ranges, message metadata, unread count init |
+| Mesh wrapper | 16 | API signatures, return ranges, message metadata, unread count init |
 | Navigation | 12 | Forward/back, history stack, deep nav, all pairs |
-| Terminal commands | 11 | Command parsing, ping arguments, neighbor aliases, scan and clipboard commands |
+| Terminal commands | 12 | Command parsing, ping arguments, neighbor aliases, scan, diagnostics, and clipboard commands |
 | GPS | 12 | NMEA parsing, coordinate conversion, fix detection |
 | Pin definitions | 9 | GPIO range, SPI/I2C conflicts, duplicates, LoRa params |
 | Trackball | 9 | Direction/click events, deadtime, idle calibration |

@@ -10,6 +10,7 @@
 #include <helpers/ArduinoHelpers.h>
 #include <helpers/AdvertDataHelpers.h>
 #include <hal/prefs.h>
+#include "mesh_diagnostics.h"
 
 namespace slopos {
 namespace mesh {
@@ -58,6 +59,40 @@ class SlopMesh : public ::mesh::Mesh {
     uint8_t  _last_trace_hashes[MAX_PATH_SIZE];
 
 protected:
+    uint32_t diagnosticTimestamp() const {
+        return getRTCClock() ? getRTCClock()->getCurrentTime() : 0;
+    }
+
+    static uint8_t diagnosticLength(size_t len) {
+        return len > 255 ? 255 : (uint8_t)len;
+    }
+
+    void recordPacketDiagnostic(DiagnosticEventType type, const char* peer,
+                                ::mesh::Packet* pkt) {
+        if (!pkt) {
+            diagnostics_record(type, diagnosticTimestamp(), 0, 0.0f, peer, nullptr, 0, 0);
+            return;
+        }
+
+        diagnostics_record(type, diagnosticTimestamp(), 0, pkt->getSNR(), peer,
+                           pkt->payload, diagnosticLength(pkt->payload_len),
+                           diagnosticLength(pkt->path_len));
+    }
+
+    void recordPathDiagnostic(DiagnosticEventType type, const char* peer,
+                              uint8_t* path, uint8_t path_len) {
+        uint8_t path_sample[MAX_PATH_SIZE];
+        size_t path_bytes = ::mesh::Packet::writePath(path_sample, path, path_len);
+        diagnostics_record(type, diagnosticTimestamp(), 0, 0.0f, peer,
+                           path_sample, diagnosticLength(path_bytes), path_len);
+    }
+
+    void logRxRaw(float snr, float rssi, const uint8_t raw[], int len) override {
+        if (len < 0) len = 0;
+        diagnostics_record(DiagnosticEventType::RawRx, diagnosticTimestamp(), (int)rssi, snr,
+                           "", raw, diagnosticLength((size_t)len), 0);
+    }
+
     // ── Peer DB ──────────────────────────────────────
     int searchPeersByHash(const uint8_t* hash) override {
         _nMatches = 0;
@@ -226,6 +261,7 @@ protected:
         if (!::mesh::Packet::isValidPathLen(path_len)) return false;
         _contacts[idx].out_path_len =
             ::mesh::Packet::copyPath(_contacts[idx].out_path, path, path_len);
+        recordPathDiagnostic(DiagnosticEventType::PeerPath, _contacts[idx].name, path, path_len);
         return true;  // accept path — Mesh will send a reciprocal return path
     }
 
@@ -243,6 +279,8 @@ protected:
                 }
                 _contacts[i].out_path_len =
                     ::mesh::Packet::copyPath(_contacts[i].out_path, path, path_len);
+                recordPathDiagnostic(DiagnosticEventType::FloodPath, _contacts[i].name,
+                                     path, path_len);
                 return;
             }
         }
@@ -283,11 +321,13 @@ public:
 
     // ── Control data ──────────────────────────────────
     void onControlDataRecv(::mesh::Packet* pkt) override {
+        recordPacketDiagnostic(DiagnosticEventType::ControlData, "", pkt);
         // Future: handle discovery/control packets
     }
 
     // ── Raw custom data ───────────────────────────────
     void onRawDataRecv(::mesh::Packet* pkt) override {
+        recordPacketDiagnostic(DiagnosticEventType::RawData, "", pkt);
         // Future: handle application-specific raw data
     }
 

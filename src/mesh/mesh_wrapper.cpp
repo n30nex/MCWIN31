@@ -11,6 +11,7 @@
 #include "hal/prefs.h"
 #include "radio_profile.h"
 #include "slop_mesh.h"
+#include "mesh_diagnostics.h"
 
 #include <SPIFFS.h>
 #include <time.h>
@@ -423,6 +424,18 @@ bool contactHasPath(int idx) {
     if (!g_mesh) return false;
     auto* c = g_mesh->getContact(idx);
     return c && c->out_path_len != OUT_PATH_UNKNOWN;
+}
+
+int diagnosticEventCount() {
+    return diagnostics_count();
+}
+
+int exportDiagnostics(MeshDiagnosticEvent* out, int max) {
+    return diagnostics_export(out, max);
+}
+
+void clearDiagnostics() {
+    diagnostics_clear();
 }
 
 void saveState() {
